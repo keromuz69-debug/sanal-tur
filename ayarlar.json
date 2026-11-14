@@ -1,0 +1,19 @@
+{
+  "_aciklama": "Site geneli ayarlar. Köşeli parantez [ ] içindeki alanlar YER TUTUCUDUR — kendi bilgilerinizle değiştirin. Her ilan kendi property.json dosyasında 'danisman' alanı ile bunları ezebilir.",
+  "marka": {
+    "ofisAdi": "RE/MAX [Ofis Adı]",
+    "slogan": "360° Sanal Tur ile Portföy Sunumu",
+    "anaRenk": "#DC1C2E",
+    "ikinciRenk": "#003DA5"
+  },
+  "danisman": {
+    "ad": "[Danışman Adı Soyadı]",
+    "unvan": "Gayrimenkul Danışmanı",
+    "telefon": "[+90 5XX XXX XX XX]",
+    "whatsapp": "",
+    "eposta": "[eposta@remax.com.tr]",
+    "ofis": "RE/MAX [Ofis Adı] – [Ofis Adresi]",
+    "foto": "",
+    "_not": "whatsapp alanına ülke koduyla, boşluksuz numara yazın: 905XXXXXXXXX. Boş bırakılırsa WhatsApp butonu pasif görünür."
+  }
+}

@@ -1,0 +1,4 @@
+{
+  "_aciklama": "Portföy sayfasında listelenecek ilanların klasör adları (tours/ altında). Editörden alınan ZIP bu dosyanın güncel halini de içerir.",
+  "ilanlar": ["ornek-daire-bakirkoy", "ornek-ofis-sisli"]
+}

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>360° Sanal Tur Portföyü</title>
+<meta name="description" content="360° sanal tur ile daire ve ticari gayrimenkul portföyü">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="ustbar">
+  <a class="logo" href="index.html"><span class="balon"></span><span><span id="ofisAdi">RE/MAX</span><small>360° Sanal Tur Portföyü</small></span></a>
+  <span class="bosluk"></span>
+  <a class="btn" href="editor.html">✎ Yeni Tur Oluştur</a>
+</header>
+<section class="kahraman">
+  <div class="kap">
+    <h1>İlanları 360° gezin</h1>
+    <p id="slogan">Daire ve ticari portföyümüzü odadan odaya sanal olarak gezin.</p>
+    <div class="filtreler">
+      <input id="ara" type="search" placeholder="İlçe, mahalle veya başlık ara…" aria-label="Ara">
+      <select id="fTip" aria-label="Tip"><option value="">Tüm tipler</option><option value="daire">Daire / Konut</option><option value="ticari">Ticari</option></select>
+      <select id="fDurum" aria-label="Durum"><option value="">Satılık + Kiralık</option><option>Satılık</option><option>Kiralık</option></select>
+    </div>
+  </div>
+</section>
+<main class="kap">
+  <div id="izgara" class="izgara"><div class="bos">İlanlar yükleniyor…</div></div>
+</main>
+<div class="altbilgi">Panoramik görüntüleyici: <a href="https://pannellum.org" target="_blank" rel="noopener">Pannellum</a> (MIT). Örnek ilanlardaki görseller Poly Haven CC0 lisanslıdır.</div>
+<script src="js/common.js"></script>
+<script>
+(function(){
+  'use strict';
+  var tum = [];
+  if (ST.dosyaKorumasi()) { document.getElementById('izgara').innerHTML = '<div class="bos">Sunucu üzerinden açın (bkz. üstteki uyarı).</div>'; }
+  ST.getJSON('ayarlar.json').then(function(a){
+    if (a.marka) { document.getElementById('ofisAdi').textContent = a.marka.ofisAdi || 'RE/MAX'; if (a.marka.slogan) document.getElementById('slogan').textContent = a.marka.slogan; }
+  }).catch(function(){});
+  ST.getJSON('tours/index.json').then(function(ix){
+    return Promise.all((ix.ilanlar || []).map(function(slug){
+      return ST.getJSON('tours/' + slug + '/property.json').then(function(p){ p._slug = slug; return p; }).catch(function(e){ console.warn(e.message); return null; });
+    }));
+  }).then(function(list){ tum = list.filter(Boolean); ciz(); })
+  .catch(function(e){ document.getElementById('izgara').innerHTML = '<div class="bos">İlan listesi yüklenemedi: ' + ST.esc(e.message) + '</div>'; });
+
+  function ciz(){
+    var q = document.getElementById('ara').value.toLocaleLowerCase('tr');
+    var t = document.getElementById('fTip').value, d = document.getElementById('fDurum').value;
+    var f = tum.filter(function(p){
+      var metin = (p.baslik + ' ' + ST.konumYaz(p)).toLocaleLowerCase('tr');
+      return (!q || metin.indexOf(q) > -1) && (!t || p.tip === t) && (!d || p.durum === d);
+    });
+    var el = document.getElementById('izgara');
+    if (!f.length) { el.innerHTML = '<div class="bos">Kriterlere uygun ilan yok.</div>'; return; }
+    el.innerHTML = f.map(function(p){
+      var b = p.bilgiler || {}, ozet = [];
+      if (b.odaSayisi && p.tip !== 'ticari') ozet.push(b.odaSayisi);
+      if (b.kullanimAlani && p.tip === 'ticari') ozet.push(b.kullanimAlani);
+      if (b.brutM2) ozet.push(b.brutM2 + ' m² brüt');
+      if (b.kat) ozet.push('Kat ' + b.kat);
+      if (b.binaYasi != null && b.binaYasi !== '') ozet.push(ST.degerYaz({k:'binaYasi'}, b.binaYasi));
+      var kapak = 'tours/' + encodeURIComponent(p._slug) + '/' + encodeURIComponent(p.kapak || (p.sahneler && p.sahneler[0] && p.sahneler[0].kucuk) || '');
+      return '<a class="kart" href="tur.html?p=' + encodeURIComponent(p._slug) + '">' +
+        '<div class="gorsel" style="background-image:url(\'' + kapak + '\')"><div class="rozetler">' +
+          '<span class="rozet kirmizi">' + ST.esc(p.durum || '') + '</span>' +
+          '<span class="rozet">' + (p.tip === 'ticari' ? 'Ticari' : 'Daire') + '</span>' +
+          (p.ornek ? '<span class="rozet sari">Örnek</span>' : '') +
+        '</div><span class="tur360">360° · ' + ((p.sahneler || []).length) + ' alan</span></div>' +
+        '<div class="icerik"><h3>' + ST.esc(p.baslik) + '</h3><div class="fiyat">' + ST.esc(ST.fiyatYaz(p)) + '</div>' +
+        '<div class="konum">📍 ' + ST.esc(ST.konumYaz(p)) + '</div>' +
+        '<div class="ozet">' + ozet.map(function(o){ return '<span>' + ST.esc(o) + '</span>'; }).join('') + '</div></div></a>';
+    }).join('');
+  }
+  ['ara','fTip','fDurum'].forEach(function(id){ document.getElementById(id).addEventListener('input', ciz); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+{
+  "id": "ornek-daire-bakirkoy",
+  "ornek": true,
+  "tip": "daire",
+  "durum": "Satılık",
+  "baslik": "Örnek Daire – Bakırköy (Demo İlan)",
+  "aciklama": "BU BİR ÖRNEK İLANDIR. Görseller ücretsiz lisanslı (CC0) örnek panoramalardır, gerçek bir mülke ait değildir. Sistemin nasıl göründüğünü göstermek için hazırlanmıştır.",
+  "fiyat": 12500000,
+  "paraBirimi": "TL",
+  "konum": {
+    "il": "İstanbul",
+    "ilce": "Bakırköy",
+    "mahalle": "Zeytinlik Mah.",
+    "harita": "Zeytinlik, Bakırköy, İstanbul"
+  },
+  "bilgiler": {
+    "brutM2": 140,
+    "netM2": 120,
+    "odaSayisi": "3+1",
+    "banyoSayisi": 2,
+    "kat": "3",
+    "katSayisi": 6,
+    "binaYasi": 8,
+    "isinma": "Doğalgaz (Kombi)",
+    "aidat": 1500,
+    "tapu": "Kat Mülkiyetli",
+    "krediyeUygun": "Evet",
+    "balkon": "Var",
+    "esyali": "Hayır",
+    "siteIcinde": "Hayır"
+  },
+  "ozellikler": ["Asansör", "Kapalı otopark", "Ankastre mutfak", "Yerden ısıtma", "Ebeveyn banyosu", "Çelik kapı", "Marmaray'a yakın", "Sahile yürüme mesafesi"],
+  "katPlani": "",
+  "kapak": "salon_thumb.jpg",
+  "ilkSahne": "giris",
+  "sahneler": [
+    {
+      "id": "giris", "ad": "Giriş Holü", "panorama": "giris.jpg", "kucuk": "giris_thumb.jpg",
+      "yaw": 0, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "salon", "yaw": 0, "pitch": -8, "metin": "Salon" },
+        { "tip": "gecis", "hedef": "yatak-odasi", "yaw": -82, "pitch": -8, "metin": "Yatak Odası" },
+        { "tip": "bilgi", "yaw": 150, "pitch": 5, "baslik": "Çelik kapı", "metin": "Örnek bilgi noktası: giriş kapısı çelik, çok noktalı kilit." },
+        { "tip": "bilgi", "yaw": -30, "pitch": -25, "baslik": "Zemin", "metin": "Örnek: Giriş holünde seramik zemin." }
+      ]
+    },
+    {
+      "id": "salon", "ad": "Salon", "panorama": "salon.jpg", "kucuk": "salon_thumb.jpg",
+      "yaw": 0, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "balkon", "yaw": 2, "pitch": -6, "metin": "Balkon" },
+        { "tip": "gecis", "hedef": "giris", "yaw": 178, "pitch": -8, "metin": "Giriş Holü" },
+        { "tip": "bilgi", "yaw": 60, "pitch": -10, "baslik": "Geniş salon", "metin": "Örnek: 35 m² salon, güney cephe, gün boyu güneş alır." },
+        { "tip": "bilgi", "yaw": -135, "pitch": -5, "baslik": "Yerden ısıtma", "metin": "Örnek: Tüm dairede yerden ısıtma sistemi mevcuttur." }
+      ]
+    },
+    {
+      "id": "yatak-odasi", "ad": "Yatak Odası", "panorama": "yatak-odasi.jpg", "kucuk": "yatak-odasi_thumb.jpg",
+      "yaw": 100, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "banyo", "yaw": -145, "pitch": -8, "metin": "Ebeveyn Banyosu" },
+        { "tip": "gecis", "hedef": "giris", "yaw": -60, "pitch": -8, "metin": "Giriş Holü" },
+        { "tip": "bilgi", "yaw": 115, "pitch": -12, "baslik": "Ebeveyn yatak odası", "metin": "Örnek: 18 m², gömme dolaplı, banyolu." },
+        { "tip": "bilgi", "yaw": 20, "pitch": 5, "baslik": "Isıcamlı PVC doğrama", "metin": "Örnek: Tüm pencereler ısı yalıtımlı çift cam." }
+      ]
+    },
+    {
+      "id": "banyo", "ad": "Banyo", "panorama": "banyo.jpg", "kucuk": "banyo_thumb.jpg",
+      "yaw": 0, "pitch": -5, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "yatak-odasi", "yaw": 115, "pitch": -8, "metin": "Yatak Odası" },
+        { "tip": "bilgi", "yaw": 0, "pitch": -15, "baslik": "Küvet + duşakabin", "metin": "Örnek: Hem küvet hem duşakabin mevcut." },
+        { "tip": "bilgi", "yaw": -130, "pitch": -5, "baslik": "Asma klozet", "metin": "Örnek: Gömme rezervuar, asma klozet." }
+      ]
+    },
+    {
+      "id": "balkon", "ad": "Balkon / Teras", "panorama": "balkon.jpg", "kucuk": "balkon_thumb.jpg",
+      "yaw": 0, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "salon", "yaw": 170, "pitch": -8, "metin": "Salon" },
+        { "tip": "bilgi", "yaw": 0, "pitch": 5, "baslik": "Bahçe / manzara", "metin": "Örnek: Yeşil alan manzaralı geniş teras." }
+      ]
+    }
+  ]
+}

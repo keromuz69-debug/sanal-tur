@@ -1,0 +1,53 @@
+{
+  "id": "ornek-ofis-sisli",
+  "ornek": true,
+  "tip": "ticari",
+  "durum": "Kiralık",
+  "baslik": "Örnek Ofis + Dükkan – Şişli (Demo İlan)",
+  "aciklama": "BU BİR ÖRNEK TİCARİ İLANDIR. Görseller ücretsiz lisanslı (CC0) örnek panoramalardır, gerçek bir mülke ait değildir.",
+  "fiyat": 85000,
+  "paraBirimi": "TL",
+  "fiyatEk": "/ ay",
+  "konum": { "il": "İstanbul", "ilce": "Şişli", "mahalle": "Mecidiyeköy Mah.", "harita": "Mecidiyeköy, Şişli, İstanbul" },
+  "bilgiler": {
+    "kullanimAlani": "Ofis / Mağaza",
+    "brutM2": 210,
+    "netM2": 180,
+    "tavanYuksekligi": "3,40 m",
+    "cephe": "Cadde cephe – Güney",
+    "vitrinCephe": "9 m",
+    "otopark": "Kapalı otopark (2 araç)",
+    "ruhsat": "İskânlı, işyeri ruhsatına uygun",
+    "kat": "Zemin + 1",
+    "katSayisi": 8,
+    "binaYasi": 12,
+    "isinma": "VRF Klima",
+    "aidat": 4500,
+    "tapu": "Kat Mülkiyetli",
+    "wcMutfak": "2 WC + Mutfak"
+  },
+  "ozellikler": ["Metroya 3 dk", "Jeneratör", "7/24 güvenlik", "Yangın merdiveni", "Fiber internet altyapısı", "Engelli erişimi"],
+  "katPlani": "",
+  "kapak": "magaza_thumb.jpg",
+  "ilkSahne": "magaza",
+  "sahneler": [
+    {
+      "id": "magaza", "ad": "Zemin Kat – Mağaza", "panorama": "magaza.jpg", "kucuk": "magaza_thumb.jpg",
+      "yaw": 0, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "ofis", "yaw": 178, "pitch": -8, "metin": "1. Kat – Ofis" },
+        { "tip": "bilgi", "yaw": 0, "pitch": 0, "baslik": "Vitrin cephesi", "metin": "Örnek: 9 m cadde cephesi, yüksek yaya trafiği." },
+        { "tip": "bilgi", "yaw": 90, "pitch": 30, "baslik": "Tavan yüksekliği 3,40 m", "metin": "Örnek: Asma tavan, gömme LED aydınlatma." }
+      ]
+    },
+    {
+      "id": "ofis", "ad": "1. Kat – Açık Ofis", "panorama": "ofis.jpg", "kucuk": "ofis_thumb.jpg",
+      "yaw": 0, "pitch": 0, "hfov": 110,
+      "noktalar": [
+        { "tip": "gecis", "hedef": "magaza", "yaw": -145, "pitch": -8, "metin": "Zemin Kat – Mağaza" },
+        { "tip": "bilgi", "yaw": 0, "pitch": 0, "baslik": "Bol gün ışığı", "metin": "Örnek: Geniş pencereler, doğal aydınlatma." },
+        { "tip": "bilgi", "yaw": 90, "pitch": -20, "baslik": "Kullanıma hazır", "metin": "Örnek: Boyalı, zemin yenilenmiş; bölme duvar eklenebilir." }
+      ]
+    }
+  ]
+}
