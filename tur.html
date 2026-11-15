@@ -3,39 +3,43 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <title>360° Sanal Tur</title>
 <link rel="stylesheet" href="vendor/pannellum/pannellum.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="tur">
-<header class="ustbar">
-  <a class="logo gizle-mobil" href="index.html" title="Tüm ilanlar"><span class="balon"></span></a>
-  <a class="btn" href="index.html" title="Portföye dön">← <span class="gizle-mobil">Portföy</span></a>
-  <div class="tur-baslik"><h1 id="baslik">Yükleniyor…</h1><span class="fiyat" id="ustFiyat"></span> <span id="ornekRozet"></span></div>
-  <span class="bosluk"></span>
-  <button id="btnPanel" class="btn-mavi" title="İlan bilgileri">ℹ <span class="gizle-mobil">Bilgiler</span></button>
-</header>
 <div class="tur-ana">
   <div class="sahne-alani">
     <div id="panorama"></div>
-    <div class="arac-cubugu">
-      <button id="btnDon" title="Otomatik döndürme">⟳ <span class="yazi">Döndür</span></button>
-      <button id="btnOtoTur" title="Tüm odaları sırayla göster (sunum modu)">▶ <span class="yazi">Otomatik Tur</span></button>
-      <button id="btnPaylas" title="Bağlantıyı paylaş">⤴ <span class="yazi">Paylaş</span></button>
-      <button id="btnQR" title="QR kod">▦ <span class="yazi">QR</span></button>
+    <div class="ipucu-katman" id="ipucu"><div><span class="el">👆</span>Parmağınla sürükleyerek etrafa bak</div></div>
+    <div class="tur-ust">
+      <a class="btn btn-ikon cam" id="btnGeri" href="index.html" aria-label="Geri">←</a>
+      <div class="bilgi"><h1 id="baslik">Yükleniyor…</h1><div class="fiyat" id="ustFiyat"></div></div>
+      <button class="btn-ikon cam" id="btnPaylas" aria-label="Paylaş" title="Paylaş">⤴</button>
+      <button class="btn-ikon cam" id="btnMenu" aria-label="Diğer seçenekler" title="Diğer">⋯</button>
     </div>
-    <div class="sahne-adi" id="sahneAdi"></div>
-    <nav class="sahne-seridi" id="serit" aria-label="Odalar"></nav>
+    <div class="menu" id="menu" role="menu">
+      <button id="mOtoTur">▶ Otomatik gezinti (sunum)</button>
+      <button id="mDon">⟳ Otomatik dönmeyi aç/kapat</button>
+      <button id="mQR">▦ QR kod</button>
+      <button id="mTam">⛶ Tam ekran</button>
+      <button id="mTum">☰ Tüm ilanlar</button>
+    </div>
+    <div class="tur-alt">
+      <div class="satir"><div class="sahne-adi" id="sahneAdi"></div><button class="cam" id="btnPanel">ⓘ İlan bilgileri</button></div>
+      <nav class="sahne-seridi" id="serit" aria-label="Odalar"></nav>
+    </div>
   </div>
-  <aside class="panel" id="panel" aria-label="İlan bilgileri"></aside>
+  <aside class="panel kapali" id="panel" aria-label="İlan bilgileri"></aside>
 </div>
-
-<div class="modal" id="modal"><div class="kutu"><button class="kapat" id="modalKapat">✕</button><div id="modalIcerik"></div></div></div>
+<div class="modal" id="modal"><div class="kutu"><button class="kapat btn-ikon btn-sade" id="modalKapat" aria-label="Kapat">✕</button><div id="modalIcerik"></div></div></div>
 <div class="toast" id="toast"></div>
-
 <script src="vendor/pannellum/pannellum.js"></script>
 <script src="vendor/qrcode/qrcode.js"></script>
 <script src="js/common.js"></script>
+<script src="js/depo.js"></script>
+<script src="js/panorama.js"></script>
 <script src="js/tur.js"></script>
 </body>
 </html>

@@ -2,77 +2,87 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>360° Sanal Tur Portföyü</title>
-<meta name="description" content="360° sanal tur ile daire ve ticari gayrimenkul portföyü">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>360° Sanal Tur</title>
+<meta name="description" content="Daire ve ticari gayrimenkulleri 360° sanal tur ile gezin">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 <header class="ustbar">
-  <a class="logo" href="index.html"><span class="balon"></span><span><span id="ofisAdi">RE/MAX</span><small>360° Sanal Tur Portföyü</small></span></a>
-  <span class="bosluk"></span>
-  <a class="btn" href="editor.html">✎ Yeni Tur Oluştur</a>
+  <a class="logo" href="index.html"><span class="isaret">360</span><span><span id="ofisAdi">Sanal Tur</span><small>Gayrimenkul 360° sunum</small></span></a>
 </header>
+
 <section class="kahraman">
-  <div class="kap">
-    <h1>İlanları 360° gezin</h1>
-    <p id="slogan">Daire ve ticari portföyümüzü odadan odaya sanal olarak gezin.</p>
-    <div class="filtreler">
-      <input id="ara" type="search" placeholder="İlçe, mahalle veya başlık ara…" aria-label="Ara">
-      <select id="fTip" aria-label="Tip"><option value="">Tüm tipler</option><option value="daire">Daire / Konut</option><option value="ticari">Ticari</option></select>
-      <select id="fDurum" aria-label="Durum"><option value="">Satılık + Kiralık</option><option>Satılık</option><option>Kiralık</option></select>
-    </div>
+  <h2>Mülkü müşterinize<br>360° gezdirin</h2>
+  <p>Telefonunuzla odaların panoramasını çekin, tek linkle paylaşın. Kod veya teknik bilgi gerekmez.</p>
+  <div class="buyuk-secim">
+    <a class="ana" href="cek.html#yeni" id="btnYeniTur"><span class="e">📷</span><span><b>Yeni Tur Oluştur</b><span>Odaları çek, bilgileri gir, paylaş</span></span></a>
+    <a href="cek.html" id="btnTurlarim"><span class="e">📁</span><span><b>Turlarım</b><span id="taslakSayi">Bu telefondaki taslaklar</span></span></a>
   </div>
 </section>
-<main class="kap">
-  <div id="izgara" class="izgara"><div class="bos">İlanlar yükleniyor…</div></div>
+
+<main class="sayfa genis" style="padding-bottom:24px">
+  <div class="bolum-baslik">Yayındaki ilanlar</div>
+  <div class="ara"><input id="ara" class="girdi" type="search" placeholder="İlçe, mahalle veya başlık ara" aria-label="Ara"></div>
+  <div class="filtre-cubugu" id="filtreler">
+    <button class="aktif" data-f="">Tümü</button>
+    <button data-f="daire">🏠 Daire</button>
+    <button data-f="ticari">🏢 Dükkan / Ofis</button>
+    <button data-f="Satılık">Satılık</button>
+    <button data-f="Kiralık">Kiralık</button>
+  </div>
+  <div id="izgara" class="izgara" style="margin-top:10px"><div class="bos">İlanlar yükleniyor…</div></div>
 </main>
-<div class="altbilgi">Panoramik görüntüleyici: <a href="https://pannellum.org" target="_blank" rel="noopener">Pannellum</a> (MIT). Örnek ilanlardaki görseller Poly Haven CC0 lisanslıdır.</div>
+<div class="altbilgi">Bilgisayardan ayrıntılı düzenleme için: <a href="editor.html">Gelişmiş düzenleyici</a><br>Görüntüleyici: Pannellum (MIT) · Örnek görseller: Poly Haven (CC0)</div>
+
 <script src="js/common.js"></script>
+<script src="js/depo.js"></script>
 <script>
 (function(){
   'use strict';
-  var tum = [];
-  if (ST.dosyaKorumasi()) { document.getElementById('izgara').innerHTML = '<div class="bos">Sunucu üzerinden açın (bkz. üstteki uyarı).</div>'; }
-  ST.getJSON('ayarlar.json').then(function(a){
-    if (a.marka) { document.getElementById('ofisAdi').textContent = a.marka.ofisAdi || 'RE/MAX'; if (a.marka.slogan) document.getElementById('slogan').textContent = a.marka.slogan; }
-  }).catch(function(){});
+  var tum = [], filtre = '';
+  ST.dosyaKorumasi();
+  ST.getJSON('ayarlar.json').then(function(a){ if (a.marka && a.marka.ofisAdi) document.getElementById('ofisAdi').textContent = a.marka.ofisAdi; }).catch(function(){});
+  Depo.taslakListe().then(function(l){ if (l.length) document.getElementById('taslakSayi').textContent = l.length + ' taslak bu telefonda kayıtlı'; }).catch(function(){});
   ST.getJSON('tours/index.json').then(function(ix){
     return Promise.all((ix.ilanlar || []).map(function(slug){
-      return ST.getJSON('tours/' + slug + '/property.json').then(function(p){ p._slug = slug; return p; }).catch(function(e){ console.warn(e.message); return null; });
+      return ST.getJSON('tours/' + slug + '/property.json').then(function(p){ p._slug = slug; return p; }).catch(function(){ return null; });
     }));
   }).then(function(list){ tum = list.filter(Boolean); ciz(); })
-  .catch(function(e){ document.getElementById('izgara').innerHTML = '<div class="bos">İlan listesi yüklenemedi: ' + ST.esc(e.message) + '</div>'; });
+  .catch(function(e){ document.getElementById('izgara').innerHTML = '<div class="bos">İlanlar yüklenemedi.</div>'; });
 
   function ciz(){
     var q = document.getElementById('ara').value.toLocaleLowerCase('tr');
-    var t = document.getElementById('fTip').value, d = document.getElementById('fDurum').value;
     var f = tum.filter(function(p){
       var metin = (p.baslik + ' ' + ST.konumYaz(p)).toLocaleLowerCase('tr');
-      return (!q || metin.indexOf(q) > -1) && (!t || p.tip === t) && (!d || p.durum === d);
+      return (!q || metin.indexOf(q) > -1) && (!filtre || p.tip === filtre || p.durum === filtre);
     });
     var el = document.getElementById('izgara');
-    if (!f.length) { el.innerHTML = '<div class="bos">Kriterlere uygun ilan yok.</div>'; return; }
+    if (!f.length) { el.innerHTML = '<div class="bos"><div class="ikon">🔍</div>' + (tum.length ? 'Bu aramaya uygun ilan yok.' : 'Henüz yayında ilan yok.<br>İlk turunuzu oluşturun!') + '</div>'; return; }
     el.innerHTML = f.map(function(p){
       var b = p.bilgiler || {}, ozet = [];
-      if (b.odaSayisi && p.tip !== 'ticari') ozet.push(b.odaSayisi);
-      if (b.kullanimAlani && p.tip === 'ticari') ozet.push(b.kullanimAlani);
-      if (b.brutM2) ozet.push(b.brutM2 + ' m² brüt');
-      if (b.kat) ozet.push('Kat ' + b.kat);
-      if (b.binaYasi != null && b.binaYasi !== '') ozet.push(ST.degerYaz({k:'binaYasi'}, b.binaYasi));
+      if (p.tip !== 'ticari' && b.odaSayisi) ozet.push(b.odaSayisi);
+      if (p.tip === 'ticari' && b.kullanimAlani) ozet.push(b.kullanimAlani);
+      if (b.brutM2) ozet.push(b.brutM2 + ' m²');
+      if (b.kat) ozet.push(b.kat + '. kat');
       var kapak = 'tours/' + encodeURIComponent(p._slug) + '/' + encodeURIComponent(p.kapak || (p.sahneler && p.sahneler[0] && p.sahneler[0].kucuk) || '');
       return '<a class="kart" href="tur.html?p=' + encodeURIComponent(p._slug) + '">' +
         '<div class="gorsel" style="background-image:url(\'' + kapak + '\')"><div class="rozetler">' +
-          '<span class="rozet kirmizi">' + ST.esc(p.durum || '') + '</span>' +
-          '<span class="rozet">' + (p.tip === 'ticari' ? 'Ticari' : 'Daire') + '</span>' +
-          (p.ornek ? '<span class="rozet sari">Örnek</span>' : '') +
-        '</div><span class="tur360">360° · ' + ((p.sahneler || []).length) + ' alan</span></div>' +
-        '<div class="icerik"><h3>' + ST.esc(p.baslik) + '</h3><div class="fiyat">' + ST.esc(ST.fiyatYaz(p)) + '</div>' +
+          '<span class="rozet ana">' + ST.esc(p.durum || '') + '</span>' + (p.ornek ? '<span class="rozet ornek">Örnek</span>' : '') +
+        '</div><span class="tur360">360° · ' + ((p.sahneler || []).length) + ' oda</span></div>' +
+        '<div class="icerik"><div class="fiyat">' + ST.esc(ST.fiyatYaz(p)) + '</div><h3>' + ST.esc(p.baslik) + '</h3>' +
         '<div class="konum">📍 ' + ST.esc(ST.konumYaz(p)) + '</div>' +
-        '<div class="ozet">' + ozet.map(function(o){ return '<span>' + ST.esc(o) + '</span>'; }).join('') + '</div></div></a>';
+        (ozet.length ? '<div class="ozet">' + ST.esc(ozet.join(' · ')) + '</div>' : '') + '</div></a>';
     }).join('');
   }
-  ['ara','fTip','fDurum'].forEach(function(id){ document.getElementById(id).addEventListener('input', ciz); });
+  document.getElementById('ara').addEventListener('input', ciz);
+  document.getElementById('filtreler').addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    filtre = b.dataset.f;
+    Array.prototype.forEach.call(this.children, function(x){ x.classList.toggle('aktif', x === b); });
+    ciz();
+  });
 })();
 </script>
 </body>

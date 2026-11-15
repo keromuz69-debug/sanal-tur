@@ -42,6 +42,13 @@
 
 ---
 
+## 2b. Sadece telefonla (360° kamera olmadan)
+`cek.html` (ana sayfada **Yeni Tur Oluştur**) telefonun kendi **Panorama** modunu kullanır:
+- **iPhone:** Kamera › modları kaydırıp **PANO**. Telefonu dik tutun, okun yönünde yavaşça dönün (iPhone en fazla ~240–270° çeker).
+- **Android:** Kamera › Diğer/Daha fazla › **Panorama** (Samsung, Xiaomi, Pixel'de isimler değişebilir).
+- “Panorama Çek” butonu bazı telefonlarda kamerayı **sadece normal fotoğraf modunda** açar (özellikle iPhone Safari). Bu durumda panoramayı Kamera uygulamasında çekip **Galeriden Seç** kullanın.
+- Sonuç tam küre değildir: tavan ve zemin görünmez, sadece etrafa dönülerek bakılır. Müşteri sunumu için yeterli; daha etkileyici sonuç için 360° kamera önerilir.
+
 ## 3. Çekimden yayına iş akışı (bir ilan ≈ 30–45 dk)
 1. **Çek** (yukarıdaki ipuçları).
 2. **Aktar**: Insta360 / Theta uygulamasından fotoğrafları **“360° fotoğraf / equirectangular JPG”** olarak dışa aktarın (2:1 oran, ör. 5760×2880). Ufku düzeltme (horizon leveling) açık olsun.
@@ -109,6 +116,13 @@
 - [ ] Netlify/Cloudflare'de yayına almak + alan adı
 - [ ] İlan başına sosyal medya önizlemesi (WhatsApp'ta link atınca kapak görseli çıksın – her ilana küçük bir HTML sayfası üretmek gerekir)
 
+### v1.5 (bu sürümde eklendi)
+- [x] Telefon için adım adım “Çek ve Kaydet” sihirbazı, taslakların telefonda kalıcı saklanması
+- [x] Telefon panoraması (kısmi panorama) desteği
+- [x] Taslağı yayınlamadan müşteriye telefonda tam ekran gösterme
+- [ ] Bulutta kayıt + tek dokunuşla yayınlama (ücretsiz Supabase/Firebase ile; kullanıcı hesabı gerekir)
+- [ ] Deneysel: tarayıcı içinde kamerayla rehberli çekim ve birleştirme (yapılmadı – telefonun kendi panorama modu daha kaliteli)
+
 ### v2 (pazarlama gücü)
 - **Markalı filigran / logo** panoramanın zemin noktasında (kamera sopasının göründüğü yeri logolu bir daire kaplar)
 - **Talep (lead) formu**: “Randevu iste” → Formspree/Netlify Forms/Google Form ile e-postanıza gelsin (sunucusuz)
@@ -132,7 +146,8 @@
 
 ## 7. Bilinen sınırlamalar (v1)
 - Sayfayı dosyadan çift tıklayarak açmak çalışmaz; yerel sunucu (`baslat.bat`) veya hosting gerekir.
-- Editör tarayıcı içinde çalışır, **otomatik kayıt yok**: işi bitirince ZIP'i indirin (sekmeyi kapatırsanız kaybolur). Daha sonra “Mevcut turu düzenle” ile yayındaki turu açıp güncelleyebilirsiniz.
+- “Çek ve Kaydet” taslakları **sadece o telefonun tarayıcısında** saklanır; tarayıcı verisi temizlenirse veya başka telefona geçilirse görünmez. Gelişmiş düzenleyicide (bilgisayar) otomatik kayıt yok.
+- Telefon panoramasının yatay açısı tahmindir (dikey açı ~65° varsayılır); görüntü basık/uzamış görünürse “Gelişmiş › dikey açı” ile ayarlanır.
 - ZIP'i siteye eklemek manuel (kopyala + yeniden yükle). v2'de Netlify/GitHub'a tek tık yükleme eklenebilir.
 - Google Harita gömme, Google'ın anahtarsız “embed” adresini kullanır; Google bu davranışı değiştirirse “Google Haritalar'da aç” butonu çalışmaya devam eder.
 - Portföy sayfası tüm ilanların JSON'unu yükler; yüzlerce ilana çıkınca sayfalama gerekir.

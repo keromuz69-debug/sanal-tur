@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>Çek ve Kaydet – 360° Sanal Tur</title>
+<link rel="stylesheet" href="vendor/pannellum/pannellum.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="sihirbaz-genis">
+<header class="ustbar">
+  <a class="btn btn-ikon btn-sade" id="btnUstGeri" href="index.html" aria-label="Geri">←</a>
+  <h1 id="ustBaslik">Turlarım</h1>
+  <span class="bosluk"></span>
+  <span class="kucuk" id="kayitDurum" aria-live="polite"></span>
+</header>
+<nav class="adimlar" id="adimlar" hidden>
+  <button class="a" data-adim="1"><span>1 · Bilgiler</span></button>
+  <button class="a" data-adim="2"><span>2 · Odalar</span></button>
+  <button class="a" data-adim="3"><span>3 · Önizle</span></button>
+  <button class="a" data-adim="4"><span>4 · Gönder</span></button>
+</nav>
+
+<main class="sayfa">
+  <!-- TURLARIM -->
+  <section class="adim" id="ekran0">
+    <h2 class="baslik-k">Turlarım</h2>
+    <p class="yardim">Turlarınız bu telefonda otomatik kaydedilir. Uygulamayı kapatsanız da kaybolmaz.</p>
+    <button class="btn btn-ana btn-buyuk btn-blok" id="btnYeni">＋ Yeni Tur Oluştur</button>
+    <div class="bolum-baslik">Kayıtlı taslaklar</div>
+    <div id="taslakListe"></div>
+    <details class="gelismis"><summary>Gelişmiş</summary><div class="ic">
+      <label class="alan">Yayındaki bir ilanı düzenlemek için telefona al<select id="yayindanAl"><option value="">İlan seçin…</option></select></label>
+      <p class="kucuk">Telefona alınan ilan yeni bir taslak olarak açılır; değişiklikten sonra yeniden gönderin.</p>
+    </div></details>
+  </section>
+
+  <!-- ADIM 1 -->
+  <section class="adim" id="ekran1">
+    <h2 class="baslik-k">İlan bilgileri</h2>
+    <p class="yardim">Sadece temel bilgiler yeterli. Diğerlerini sonra da ekleyebilirsiniz.</p>
+    <div class="secim-kartlari" id="tipSec">
+      <button type="button" data-tip="daire"><span class="e">🏠</span>Daire / Konut<small>Ev, villa, rezidans</small></button>
+      <button type="button" data-tip="ticari"><span class="e">🏢</span>Dükkan / Ofis<small>Ticari mülk</small></button>
+    </div>
+    <label class="alan">İlan başlığı<input id="fBaslik" placeholder="Örn. Florya'da deniz manzaralı 3+1" autocomplete="off"></label>
+    <div class="parcali" id="durumSec"><button type="button" data-d="Satılık">Satılık</button><button type="button" data-d="Kiralık">Kiralık</button></div>
+    <label class="alan">Fiyat (₺)<input id="fFiyat" inputmode="numeric" placeholder="Örn. 12.500.000" autocomplete="off"><small id="fiyatOn"></small></label>
+    <div class="izgara2">
+      <label class="alan">İlçe<input id="fIlce" list="ilceler" placeholder="Bakırköy"></label>
+      <label class="alan">Mahalle<input id="fMahalle" placeholder="Yeşilköy"></label>
+    </div>
+    <details class="gelismis" id="dahaFazla"><summary>Daha fazla bilgi (isteğe bağlı)</summary><div class="ic">
+      <div class="izgara2" id="ekAlanlar"></div>
+      <div class="alan">Öne çıkan özellikler <small>Dokunarak seçin</small></div>
+      <div class="cipler" id="ozCipler"></div>
+      <label class="alan" style="margin-top:14px">Açıklama<textarea id="fAciklama" placeholder="Müşteriye göstermek istediğiniz kısa tanıtım"></textarea></label>
+      <label class="alan">Haritada gösterilecek adres<input id="fHarita" placeholder="Örn. Yeşilköy, Bakırköy, İstanbul"><small>Gizlilik için kapı numarası yazmayın.</small></label>
+      <div class="izgara2">
+        <label class="alan">Para birimi<select id="fPara"><option>TL</option><option>USD</option><option>EUR</option></select></label>
+        <label class="alan">Fiyat notu<input id="fFiyatEk" placeholder="Örn. / ay"></label>
+      </div>
+    </div></details>
+  </section>
+
+  <!-- ADIM 2 -->
+  <section class="adim" id="ekran2">
+    <h2 class="baslik-k">Odaları çekin</h2>
+    <p class="yardim">Her oda için bir panorama ekleyin. Sırası, turdaki gezinti sırası olur.</p>
+    <div id="odaListe"></div>
+    <div class="cekim-kutusu">
+      <h3 id="siradakiBaslik">İlk oda</h3>
+      <p class="kucuk" style="margin:0 0 12px">Oda adını seçin, sonra panoramayı çekin.</p>
+      <div class="cipler" id="odaAdCipler" style="margin-bottom:10px"></div>
+      <input class="girdi" id="odaAd" placeholder="Oda adı (örn. Salon)" autocomplete="off" style="margin-bottom:12px">
+      <label class="btn btn-ana btn-buyuk btn-blok" for="dosyaKamera">📷 Panorama Çek</label>
+      <input type="file" id="dosyaKamera" accept="image/*" capture="environment" hidden>
+      <label class="btn btn-buyuk btn-blok" for="dosyaGaleri" style="margin-top:10px">🖼 Galeriden Seç</label>
+      <input type="file" id="dosyaGaleri" accept="image/*" multiple hidden>
+      <details class="gelismis"><summary>Gelişmiş</summary><div class="ic">
+        <label class="alan">Fotoğraf türü<select id="zorlaTur"><option value="">Otomatik algıla</option><option value="genis">Telefon panoraması (geniş açı)</option><option value="kure">360° kamera (tam küre)</option></select></label>
+        <label class="alan">Telefon panoraması dikey açısı: <b id="dikeyDeger">65°</b><input type="range" id="dikeyAci" min="45" max="100" value="65"><small>Görüntü basık görünüyorsa artırın, uzamış görünüyorsa azaltın.</small></label>
+      </div></details>
+    </div>
+    <details class="yardim-kutu" style="margin-top:14px" id="nasilCekilir"><summary>📱 Telefonda panorama nasıl çekilir?</summary>
+      <ol>
+        <li><b>iPhone:</b> Kamera uygulamasında alttaki modları kaydırıp <b>PANO</b>'yu seçin.</li>
+        <li><b>Android:</b> Kamera › <b>Diğer / Daha fazla</b> › <b>Panorama</b>.</li>
+        <li>Odanın ortasında durun, telefonu dik ve göğüs hizasında tutun.</li>
+        <li>Deklanşöre basın, okun gösterdiği yönde <b>yavaşça</b> dönün. Mümkünse tam tur atın.</li>
+        <li>Işıkları ve perdeleri açın. Kadrajda insan olmasın.</li>
+      </ol>
+      <p class="kucuk" style="margin:0 0 12px">💡 “Panorama Çek” bazı telefonlarda kamerayı sadece normal fotoğraf modunda açar. O zaman panoramayı Kamera uygulamasında çekip <b>Galeriden Seç</b>'e dokunun.</p>
+    </details>
+  </section>
+
+  <!-- ADIM 3 -->
+  <section class="adim" id="ekran3">
+    <h2 class="baslik-k">Önizleyin</h2>
+    <p class="yardim">Kırmızı oklar odalar arasında otomatik geçiş sağlar. İsterseniz okları taşıyın veya bilgi noktası ekleyin.</p>
+    <div class="onizleme-duzen">
+      <div>
+        <div class="onizleme-alan" id="onizAlan"><div id="onizPano"></div><div class="yerlestir-uyari" id="yerlestirUyari">Yerini seçmek için dokunun</div></div>
+        <div class="mini-serit" id="miniSerit"></div>
+      </div>
+      <div>
+        <div class="kart-k">
+          <b id="onizOdaAd">Oda</b>
+          <div class="arac-izgara">
+            <button id="tBilgi">ⓘ Bilgi noktası ekle</button>
+            <button id="tBaslangic">◎ Bu açıdan başlasın</button>
+            <button id="tIleri">➜ Sonraki oda okunu taşı</button>
+            <button id="tGeri">← Önceki oda okunu taşı</button>
+          </div>
+          <div id="bilgiListe"></div>
+        </div>
+        <a class="btn btn-buyuk btn-blok" id="musteriGibi" style="margin-top:14px">👁 Müşteri gibi tam ekran gör</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADIM 4 -->
+  <section class="adim" id="ekran4">
+    <h2 class="baslik-k">Gönder ve yayınla</h2>
+    <p class="yardim">Turunuz hazır! Önce bu telefonda gösterebilir, sonra yayınlamak için gönderebilirsiniz.</p>
+    <div class="kart-k ozet-kart"><div class="resim" id="ozetResim"></div><div><b id="ozetBaslik"></b><div class="kucuk" id="ozetAlt"></div></div></div>
+    <div class="bolum-baslik">Müşteriye hemen göster</div>
+    <a class="btn btn-buyuk btn-blok btn-koyu" id="btnGoster">📱 Bu telefonda tam ekran aç</a>
+    <div class="bolum-baslik">Yayınlamak için gönder</div>
+    <button class="btn btn-ana btn-buyuk btn-blok" id="btnPaylasZip">📤 Tur dosyasını paylaş</button>
+    <button class="btn btn-buyuk btn-blok" id="btnIndirZip" style="margin-top:10px">⬇ Tur dosyasını indir</button>
+    <p class="kucuk" style="margin-top:10px">Dosyayı WhatsApp'ta kendinize veya site yöneticinize, ya da Dosyalar/Drive'a gönderebilirsiniz.</p>
+    <details class="yardim-kutu"><summary>🌐 Nasıl yayınlanır?</summary>
+      <ol>
+        <li>Tur dosyasını (ZIP) bilgisayara alın.</li>
+        <li>ZIP'i açın; içindeki <b>tours</b> klasörünü sitenin klasörüne kopyalayın.</li>
+        <li>Siteyi güncelleyin (GitHub'a yükleyin). Birkaç dakika içinde ilan portföyde görünür.</li>
+      </ol>
+      <p class="kucuk" style="margin:0 0 12px">Tur linki: <code id="turLink"></code></p>
+    </details>
+    <details class="gelismis"><summary>Gelişmiş</summary><div class="ic">
+      <label class="alan">Link adı<input id="fSlug" autocomplete="off"><small>Turun internet adresinde görünür. Türkçe karakter ve boşluk kullanılmaz.</small></label>
+      <label class="alan">Bu ilana özel danışman adı<input id="fDanAd" placeholder="Boşsa genel ayar kullanılır"></label>
+      <label class="alan">Danışman telefonu<input id="fDanTel" inputmode="tel" placeholder="+90 5XX XXX XX XX"></label>
+      <label class="alan">WhatsApp numarası<input id="fDanWa" inputmode="tel" placeholder="905XXXXXXXXX"></label>
+      <button class="btn btn-blok" id="btnTaslakSil" style="color:var(--ana)">🗑 Bu taslağı sil</button>
+    </div></details>
+  </section>
+</main>
+
+<div class="alt-cubuk" id="altCubuk" hidden><div class="ic">
+  <button class="geri" id="btnGeri">←</button>
+  <button class="btn-ana" id="btnIleri">Devam</button>
+</div></div>
+
+<div class="modal" id="modal"><div class="kutu form-modal"><button class="kapat btn-ikon btn-sade" id="modalKapat" aria-label="Kapat">✕</button><div id="modalIcerik"></div></div></div>
+<div class="toast" id="toast"></div>
+<div class="yukleniyor" id="yukleniyor"><div><div class="donen"></div><span id="yukleniyorMetin">Hazırlanıyor…</span></div></div>
+<datalist id="ilceler"><option>Arnavutköy</option><option>Avcılar</option><option>Bağcılar</option><option>Bahçelievler</option><option>Bakırköy</option><option>Başakşehir</option><option>Bayrampaşa</option><option>Beşiktaş</option><option>Beylikdüzü</option><option>Beyoğlu</option><option>Büyükçekmece</option><option>Çatalca</option><option>Esenler</option><option>Esenyurt</option><option>Eyüpsultan</option><option>Fatih</option><option>Gaziosmanpaşa</option><option>Güngören</option><option>Kağıthane</option><option>Küçükçekmece</option><option>Sarıyer</option><option>Silivri</option><option>Sultangazi</option><option>Şişli</option><option>Zeytinburnu</option></datalist>
+
+<script src="vendor/pannellum/pannellum.js"></script>
+<script src="vendor/jszip/jszip.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/depo.js"></script>
+<script src="js/panorama.js"></script>
+<script src="js/cek.js"></script>
+</body>
+</html>

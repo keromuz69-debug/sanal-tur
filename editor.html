@@ -2,18 +2,20 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tur Editörü – 360° Sanal Tur</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Gelişmiş Düzenleyici – 360° Sanal Tur</title>
 <link rel="stylesheet" href="vendor/pannellum/pannellum.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="editor">
 <header class="ustbar">
-  <a class="logo" href="index.html"><span class="balon"></span><span>Tur Editörü<small>Kod yazmadan yeni 360° tur hazırlayın</small></span></a>
+  <a class="logo" href="index.html"><span class="isaret">360</span><span>Gelişmiş Düzenleyici<small>Bilgisayar için ayrıntılı düzenleme</small></span></a>
   <span class="bosluk"></span>
-  <select id="mevcutSec" aria-label="Mevcut tur"><option value="">Mevcut turu düzenle…</option></select>
+  <a class="btn" href="cek.html">📷 Telefonla oluştur</a>
+  <select id="mevcutSec" aria-label="Mevcut tur" class="girdi" style="width:auto;min-height:44px"><option value="">Yayındaki turu aç…</option></select>
   <button id="btnYeni">Yeni ilan</button>
 </header>
+<div class="ed-mobil-uyari">Telefondan kullanıyorsanız <a href="cek.html"><b>adım adım Çek ve Kaydet</b></a> sayfası çok daha kolaydır.</div>
 <div class="ed-ana">
   <form class="ed-form" id="form" onsubmit="return false">
     <details open><summary>1 · Genel Bilgiler</summary><div class="govde">
@@ -48,45 +50,46 @@
       <label>Telefon<input name="danisman.telefon" placeholder="+90 5XX XXX XX XX"></label>
       <label>WhatsApp (905XXXXXXXXX)<input name="danisman.whatsapp"></label>
     </div></details>
-    <details open><summary>7 · Dışa Aktar</summary><div class="govde">
-      <label class="tam">Klasör adı (bağlantıda görünür)<input name="slug" id="slug" placeholder="florya-3-1-deniz-manzarali"></label>
-      <p class="ipucu">ZIP'i sitenizin ana klasörüne çıkarın (tours/ klasörü birleşir), sonra siteyi yeniden yükleyin. Tur adresi: <code id="turAdres">tur.html?p=…</code></p>
-      <button type="button" class="btn-ana" id="btnZip">⬇ ZIP indir (tüm dosyalar)</button>
-      <button type="button" id="btnJson">⬇ Sadece property.json</button>
+    <details open><summary>7 · Kaydet ve Gönder</summary><div class="govde">
+      <label class="tam">Link adı (turun internet adresinde görünür)<input name="slug" id="slug" placeholder="florya-3-1-deniz-manzarali"></label>
+      <p class="ipucu">İndirilen tur dosyasını (ZIP) açıp içindeki <b>tours</b> klasörünü sitenin klasörüne kopyalayın, sonra siteyi güncelleyin. Tur adresi: <code id="turAdres">tur.html?p=…</code></p>
+      <button type="button" class="btn-ana" id="btnZip">⬇ Tur dosyasını indir (ZIP)</button>
+      <button type="button" id="btnJson">⬇ Sadece ilan bilgi dosyasını indir</button>
     </div></details>
   </form>
   <div class="ed-sag">
     <div class="ed-arac">
-      <label class="btn btn-mavi" for="panoDosya">＋ Panorama ekle</label>
+      <label class="btn btn-ana" for="panoDosya">＋ Panorama ekle</label>
       <input type="file" id="panoDosya" accept="image/jpeg,image/png,image/webp" multiple hidden>
-      <label style="font-size:13px;display:flex;gap:4px;align-items:center"><input type="checkbox" id="kucult" checked> 4096 px'e küçült (mobil uyumu için önerilir)</label>
+      
       <span class="bosluk"></span>
-      <button id="btnGecis" title="Panoramaya tıklayarak başka odaya geçiş oku ekleyin">➜ Geçiş noktası</button>
+      <button id="btnGecis" title="Panoramaya tıklayarak başka odaya geçiş oku ekleyin">➜ Geçiş oku</button>
       <button id="btnBilgi" title="Panoramaya tıklayarak bilgi notu ekleyin">ⓘ Bilgi noktası</button>
-      <button id="btnBakis" title="Bu odanın açılış bakış açısını şu anki görünüm yap">◎ Açılış bakışı yap</button>
+      <button id="btnBakis" title="Oda açıldığında bu yöne baksın">◎ Bu açıdan başlasın</button>
       <button id="btnIlk" title="Tur bu odadan başlasın">★ İlk oda yap</button>
     </div>
     <div class="ed-onizleme" id="onizleme">
       <div id="edPanorama"></div>
       <div class="ed-bos" id="edBos"><div><h2 style="margin:0 0 8px;color:#fff">360° fotoğraflarınızı ekleyin</h2>
-        <p>Yukarıdaki <b>＋ Panorama ekle</b> ile 2:1 oranlı (equirectangular) JPG fotoğrafları seçin.<br>Insta360, Ricoh Theta veya telefon panorama uygulamalarının dışa aktardığı 360° fotoğraflar uygundur.</p></div></div>
+        <p>Yukarıdaki <b>＋ Panorama ekle</b> ile fotoğrafları seçin.<br>Telefonun Panorama modunda çekilmiş geniş fotoğraflar ve 360° kamera (Insta360, Ricoh Theta) fotoğrafları uygundur.</p></div></div>
       <div class="ed-mod" id="edMod">Panoramada noktanın yerine tıklayın · Esc ile iptal</div>
     </div>
     <div class="ed-alt">
-      <div><h4>Odalar / Sahneler</h4><div class="sahne-liste" id="sahneListe"><p class="ipucu" style="color:var(--soluk);font-size:13px">Henüz panorama yok.</p></div></div>
-      <div><h4 id="noktaBaslik">Noktalar</h4><div class="nokta-liste" id="noktaListe"></div></div>
+      <div><h4>Odalar</h4><div class="sahne-liste" id="sahneListe"><p class="ipucu" style="color:var(--soluk);font-size:13px">Henüz panorama yok.</p></div></div>
+      <div><h4 id="noktaBaslik">Oklar ve bilgi noktaları</h4><div class="nokta-liste" id="noktaListe"></div></div>
     </div>
   </div>
 </div>
 <datalist id="ilceler">
   <option>Arnavutköy</option><option>Avcılar</option><option>Bağcılar</option><option>Bahçelievler</option><option>Bakırköy</option><option>Başakşehir</option><option>Bayrampaşa</option><option>Beşiktaş</option><option>Beylikdüzü</option><option>Beyoğlu</option><option>Büyükçekmece</option><option>Çatalca</option><option>Esenler</option><option>Esenyurt</option><option>Eyüpsultan</option><option>Fatih</option><option>Gaziosmanpaşa</option><option>Güngören</option><option>Kağıthane</option><option>Küçükçekmece</option><option>Sarıyer</option><option>Silivri</option><option>Sultangazi</option><option>Şişli</option><option>Zeytinburnu</option>
 </datalist>
-<div class="modal" id="modal"><div class="kutu form-modal"><button class="kapat" id="modalKapat" type="button">✕</button><div id="modalIcerik"></div></div></div>
+<div class="modal" id="modal"><div class="kutu form-modal"><button class="kapat btn-ikon btn-sade" id="modalKapat" type="button">✕</button><div id="modalIcerik"></div></div></div>
 <div class="toast" id="toast"></div>
-<div class="yukleniyor" id="yukleniyor"><span id="yukleniyorMetin">İşleniyor…</span></div>
+<div class="yukleniyor" id="yukleniyor"><div><div class="donen"></div><span id="yukleniyorMetin">İşleniyor…</span></div></div>
 <script src="vendor/pannellum/pannellum.js"></script>
 <script src="vendor/jszip/jszip.min.js"></script>
 <script src="js/common.js"></script>
+<script src="js/panorama.js"></script>
 <script src="js/editor.js"></script>
 </body>
 </html>

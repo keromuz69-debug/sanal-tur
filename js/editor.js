@@ -68,15 +68,8 @@
     return new Promise(function (res) { c.toBlob(res, 'image/jpeg', q); });
   }
   function panoramaIsle(file) {
-    return gorselYukle(file).then(function (img) {
-      var w = img.width, h = img.height, oran = w / h;
-      var uyari = Math.abs(oran - 2) > 0.05 ? file.name + ': oran ' + oran.toFixed(2) + ':1 — 360° panorama 2:1 olmalı, görüntü bozuk görünebilir.' : '';
-      var kucult = $('kucult').checked && w > 4096;
-      var anaP = kucult ? canvasBlob(img, 4096, Math.round(4096 / oran), 0.85) : Promise.resolve(file);
-      return Promise.all([anaP, canvasBlob(img, 480, Math.round(480 / oran), 0.78)]).then(function (r) {
-        var ext = kucult ? 'jpg' : ({ 'image/png': 'png', 'image/webp': 'webp' }[file.type] || 'jpg');
-        return { blob: r[0], ext: ext, thumbBlob: r[1], uyari: uyari, genislik: kucult ? 4096 : w };
-      });
+    return STP.isle(file, {}).then(function (r) {
+      return { blob: r.blob, ext: 'jpg', thumbBlob: r.kucuk, uyari: r.uyari ? file.name + ': ' + r.uyari : '', genislik: r.gen, tur: r.tur, haov: r.haov, vaov: r.vaov, vOffset: r.vOffset };
     });
   }
   function benzersizId(temel) {
@@ -99,9 +92,8 @@
         $('yukleniyorMetin').textContent = 'Panorama işleniyor (' + (i + 1) + '/' + dosyalar.length + '): ' + f.name;
         return panoramaIsle(f).then(function (r) {
           if (r.uyari) uyarilar.push(r.uyari);
-          if (!$('kucult').checked && r.genislik > 8192) uyarilar.push(f.name + ': ' + r.genislik + ' px çok geniş; birçok telefonda açılmaz. Küçültme seçeneğini açın.');
           var ad = adTahmin(f.name);
-          sahneEkle({ id: benzersizId(ad), ad: ad, yaw: 0, pitch: 0, hfov: 110, noktalar: [], blob: r.blob, ext: r.ext, thumbBlob: r.thumbBlob });
+          sahneEkle({ id: benzersizId(ad), ad: ad, yaw: 0, pitch: 0, hfov: 100, noktalar: [], blob: r.blob, ext: r.ext, thumbBlob: r.thumbBlob, tur: r.tur, haov: r.haov, vaov: r.vaov, vOffset: r.vOffset });
         });
       });
     });
@@ -166,13 +158,13 @@
   }
   function noktaBaslik() {
     var s = sahneler[secili];
-    $('noktaBaslik').textContent = s ? 'Noktalar – ' + s.ad : 'Noktalar';
+    $('noktaBaslik').textContent = s ? 'Oklar ve bilgi noktaları – ' + s.ad : 'Oklar ve bilgi noktaları';
   }
   function noktalariCiz() {
     noktaBaslik();
     var s = sahneler[secili], el = $('noktaListe');
     if (!s) { el.innerHTML = ''; return; }
-    if (!s.noktalar.length) { el.innerHTML = '<p style="color:var(--soluk);font-size:13px;margin:0">Bu odada nokta yok. Üstteki <b>➜ Geçiş noktası</b> veya <b>ⓘ Bilgi noktası</b> butonuna basıp panoramaya tıklayın.</p>'; return; }
+    if (!s.noktalar.length) { el.innerHTML = '<p style="color:var(--soluk);font-size:13px;margin:0">Bu odada ok veya bilgi noktası yok. Üstteki <b>➜ Geçiş oku</b> veya <b>ⓘ Bilgi noktası</b> butonuna basıp panoramaya tıklayın.</p>'; return; }
     el.innerHTML = s.noktalar.map(function (n, i) {
       var hedef = n.tip === 'gecis' ? (sahneler.filter(function (x) { return x.id === n.hedef; })[0] || {}).ad : '';
       var metin = n.tip === 'gecis' ? '→ ' + (n.metin || hedef || n.hedef) : (n.baslik || '') + (n.metin ? ' – ' + n.metin : '');
@@ -200,10 +192,10 @@
     if (viewer) { try { viewer.destroy(); } catch (e) {} viewer = null; }
     $('edBos').style.display = s ? 'none' : '';
     if (!s) return;
-    viewer = pannellum.viewer('edPanorama', {
-      type: 'equirectangular', panorama: s.url, autoLoad: true,
-      yaw: bakis ? bakis.yaw : s.yaw, pitch: bakis ? bakis.pitch : s.pitch, hfov: bakis ? bakis.hfov : s.hfov,
-      minHfov: 40, maxHfov: 120, showControls: true, compass: false,
+    var ayar = STP.sahneAyari(s, s.url);
+    if (bakis) { ayar.yaw = bakis.yaw; ayar.pitch = bakis.pitch; ayar.hfov = bakis.hfov; }
+    viewer = pannellum.viewer('edPanorama', Object.assign(ayar, {
+      autoLoad: true, showControls: true, compass: false,
       hotSpots: s.noktalar.map(function (n, idx) {
         return {
           pitch: n.pitch, yaw: n.yaw, type: 'info', cssClass: 'st-hs-kok',
@@ -216,7 +208,8 @@
           }
         };
       })
-    });
+    }));
+    STP.bagla(viewer);
     viewer.on('error', function (e) { console.error('Pannellum:', e); });
     window.__edViewer = viewer;
   }
@@ -239,11 +232,11 @@
     $('onizleme').classList.toggle('yerlestir', !!m);
     $('btnGecis').classList.toggle('aktif', m === 'gecis');
     $('btnBilgi').classList.toggle('aktif', m === 'bilgi');
-    $('edMod').textContent = m === 'gecis' ? 'Geçiş okunun yerine tıklayın (genelde kapı / koridor) · Esc ile iptal' : 'Bilgi noktasının yerine tıklayın · Esc ile iptal';
+    $('edMod').textContent = m === 'gecis' ? 'Geçiş okunun yerine tıklayın (genelde kapı) · Esc ile iptal' : 'Bilgi noktasının yerine tıklayın · Esc ile iptal';
   }
   $('btnGecis').addEventListener('click', function () {
     if (!sahneKontrol()) return;
-    if (sahneler.length < 2) { toast('Geçiş noktası için en az 2 oda gerekir'); return; }
+    if (sahneler.length < 2) { toast('Geçiş oku için en az 2 oda gerekir'); return; }
     modAyarla(mod === 'gecis' ? null : 'gecis');
   });
   $('btnBilgi').addEventListener('click', function () { if (sahneKontrol()) modAyarla(mod === 'bilgi' ? null : 'bilgi'); });
@@ -251,7 +244,7 @@
     if (!sahneKontrol()) return;
     var s = sahneler[secili];
     s.yaw = Math.round(viewer.getYaw()); s.pitch = Math.round(viewer.getPitch()); s.hfov = Math.round(viewer.getHfov());
-    degisti = true; toast('"' + s.ad + '" açılış bakışı kaydedildi');
+    degisti = true; toast('"' + s.ad + '" bu açıdan başlayacak');
   });
   $('btnIlk').addEventListener('click', function () {
     if (!sahneKontrol()) return;
@@ -263,7 +256,7 @@
   function noktaFormu(t, pitch, yaw, duzenleIdx) {
     var s = sahneler[secili];
     var n = duzenleIdx > -1 ? s.noktalar[duzenleIdx] : { tip: t, pitch: pitch, yaw: yaw };
-    var h = '<h3 style="margin-top:0">' + (t === 'gecis' ? '➜ Geçiş noktası' : 'ⓘ Bilgi noktası') + '</h3>';
+    var h = '<h3 style="margin-top:0">' + (t === 'gecis' ? '➜ Geçiş oku' : 'ⓘ Bilgi noktası') + '</h3>';
     if (t === 'gecis') {
       var digerleri = sahneler.filter(function (x) { return x.id !== s.id; });
       h += '<label>Hangi odaya geçilsin?<select id="nfHedef">' + digerleri.map(function (x) { return '<option value="' + x.id + '"' + (x.id === n.hedef ? ' selected' : '') + '>' + ST.esc(x.ad) + '</option>'; }).join('') + '</select></label>' +
@@ -273,7 +266,7 @@
         '<label>Açıklama (opsiyonel)<textarea id="nfMetin" rows="3" placeholder="Örn. Bosch ankastre set, granit tezgah">' + ST.esc(n.metin || '') + '</textarea></label>' +
         '<div class="oz-cipler" style="max-width:380px;margin-bottom:10px">' + ['Ankastre mutfak', 'Yerden ısıtma', 'Ebeveyn banyosu', 'Gömme dolap', 'Deniz manzarası', 'Isıcam PVC', 'Laminat parke', 'Klima', 'Vestiyer', 'Asma tavan', 'Vitrin cephesi', 'Tavan yüksekliği'].map(function (o) { return '<button type="button" class="nfHazir">' + o + '</button>'; }).join('') + '</div>';
     }
-    h += '<p style="font-size:12px;color:var(--soluk)">Konum: yaw ' + n.yaw + '°, pitch ' + n.pitch + '°</p><div class="dugmeler"><button type="button" class="btn-ana" id="nfKaydet">Kaydet</button><button type="button" id="nfIptal">İptal</button></div>';
+    h += '<p style="font-size:12px;color:var(--soluk)">Konum: yatay ' + n.yaw + '°, dikey ' + n.pitch + '°</p><div class="dugmeler"><button type="button" class="btn-ana" id="nfKaydet">Kaydet</button><button type="button" id="nfIptal">İptal</button></div>';
     modalAc(h);
     Array.prototype.forEach.call(document.querySelectorAll('.nfHazir'), function (b) { b.addEventListener('click', function () { $('nfBaslik').value = b.textContent; }); });
     var ilk = $('nfBaslik') || $('nfHedef'); if (ilk) ilk.focus();
@@ -318,8 +311,8 @@
       kapak: kapakId ? kapakId + '_thumb.jpg' : '',
       ilkSahne: ilkSahne || (sahneler[0] && sahneler[0].id) || '',
       sahneler: sahneler.map(function (s) {
-        return { id: s.id, ad: s.ad, panorama: s.id + '.' + s.ext, kucuk: s.id + '_thumb.jpg', yaw: s.yaw, pitch: s.pitch, hfov: s.hfov,
-          noktalar: s.noktalar.map(function (n) { return n.tip === 'gecis' ? { tip: 'gecis', hedef: n.hedef, yaw: n.yaw, pitch: n.pitch, metin: n.metin } : { tip: 'bilgi', yaw: n.yaw, pitch: n.pitch, baslik: n.baslik, metin: n.metin }; }) };
+        return Object.assign({ id: s.id, ad: s.ad, panorama: s.id + '.' + s.ext, kucuk: s.id + '_thumb.jpg', tur: s.tur || 'kure' }, s.tur === 'genis' ? { haov: s.haov, vaov: s.vaov, vOffset: s.vOffset || 0 } : {}, { yaw: s.yaw, pitch: s.pitch, hfov: s.hfov,
+          noktalar: s.noktalar.map(function (n) { return n.tip === 'gecis' ? { tip: 'gecis', hedef: n.hedef, yaw: n.yaw, pitch: n.pitch, metin: n.metin } : { tip: 'bilgi', yaw: n.yaw, pitch: n.pitch, baslik: n.baslik, metin: n.metin }; }) });
       })
     };
     if (Object.keys(dan).length) p.danisman = dan;
@@ -334,7 +327,7 @@
     if (!get('baslik')) h.push('İlan başlığı boş.');
     if (!sahneler.length) h.push('Hiç panorama eklenmedi.');
     var yalniz = sahneler.length > 1 ? sahneler.filter(function (s) { return !s.noktalar.some(function (n) { return n.tip === 'gecis'; }); }) : [];
-    if (yalniz.length) h.push('Geçiş noktası olmayan odalar: ' + yalniz.map(function (s) { return s.ad; }).join(', ') + ' (alttaki oda şeridinden yine de gezilebilir).');
+    if (yalniz.length) h.push('Geçiş oku olmayan odalar: ' + yalniz.map(function (s) { return s.ad; }).join(', ') + ' (alttaki oda şeridinden yine de gezilebilir).');
     return h;
   }
   $('btnJson').addEventListener('click', function () {
@@ -343,9 +336,9 @@
   });
   $('btnZip').addEventListener('click', function () {
     var h = kontrol();
-    if (h.length && !confirm('Uyarılar:\n• ' + h.join('\n• ') + '\n\nYine de ZIP oluşturulsun mu?')) return;
+    if (h.length && !confirm('Uyarılar:\n• ' + h.join('\n• ') + '\n\nYine de tur dosyası oluşturulsun mu?')) return;
     var p = propertyOlustur(), slug = p.id;
-    yukleniyor(true, 'ZIP hazırlanıyor…');
+    yukleniyor(true, 'Tur dosyası hazırlanıyor…');
     var zip = new JSZip(), klasor = zip.folder('tours').folder(slug);
     klasor.file('property.json', JSON.stringify(p, null, 2));
     sahneler.forEach(function (s) { klasor.file(s.id + '.' + s.ext, s.blob); klasor.file(s.id + '_thumb.jpg', s.thumbBlob || s.blob); });
@@ -356,9 +349,9 @@
       zip.folder('tours').file('index.json', JSON.stringify(ix, null, 2));
       zip.file('NASIL-YUKLENIR.txt', 'Bu ZIP\'in içindeki "tours" klasörünü sanal tur sitenizin ana klasörüne kopyalayın (mevcut tours klasörüyle birleştirin, index.json\'ın üzerine yazın).\n' +
         'Ardından siteyi yeniden yayınlayın (Netlify: klasörü sürükle-bırak; GitHub Pages: dosyaları yükle/commit).\n\nTur adresi: tur.html?p=' + slug + '\n');
-      return zip.generateAsync({ type: 'blob', compression: 'STORE' }, function (m) { $('yukleniyorMetin').textContent = 'ZIP hazırlanıyor… %' + Math.round(m.percent); });
-    }).then(function (b) { yukleniyor(false); indir(b, 'sanal-tur-' + slug + '.zip'); degisti = false; toast('ZIP indirildi'); })
-      .catch(function (e) { yukleniyor(false); alert('ZIP oluşturulamadı: ' + e.message); });
+      return zip.generateAsync({ type: 'blob', compression: 'STORE' }, function (m) { $('yukleniyorMetin').textContent = 'Tur dosyası hazırlanıyor… %' + Math.round(m.percent); });
+    }).then(function (b) { yukleniyor(false); indir(b, 'sanal-tur-' + slug + '.zip'); degisti = false; toast('Tur dosyası indirildi'); })
+      .catch(function (e) { yukleniyor(false); alert('Tur dosyası oluşturulamadı: ' + e.message); });
   });
 
   /* ---------- Mevcut turu açma ---------- */
@@ -375,7 +368,7 @@
       var blob = function (f) { return fetch(taban + f).then(function (r) { if (!r.ok) throw new Error(f + ' bulunamadı'); return r.blob(); }); };
       return Promise.all((p.sahneler || []).map(function (s) {
         return Promise.all([blob(s.panorama), s.kucuk ? blob(s.kucuk).catch(function () { return null; }) : null]).then(function (r) {
-          return { id: s.id, ad: s.ad, yaw: s.yaw || 0, pitch: s.pitch || 0, hfov: s.hfov || 110, noktalar: JSON.parse(JSON.stringify(s.noktalar || [])), blob: r[0], thumbBlob: r[1], ext: (s.panorama.split('.').pop() || 'jpg') };
+          return { id: s.id, ad: s.ad, tur: s.tur || ((s.haov && s.haov < 360) ? 'genis' : 'kure'), haov: s.haov || 360, vaov: s.vaov || 180, vOffset: s.vOffset || 0, yaw: s.yaw || 0, pitch: s.pitch || 0, hfov: s.hfov || 110, noktalar: JSON.parse(JSON.stringify(s.noktalar || [])), blob: r[0], thumbBlob: r[1], ext: (s.panorama.split('.').pop() || 'jpg') };
         });
       })).then(function (ss) {
         var kp = p.katPlani ? blob(p.katPlani).then(function (b) { return { blob: b, ext: p.katPlani.split('.').pop(), url: URL.createObjectURL(b) }; }).catch(function () { return null; }) : Promise.resolve(null);
