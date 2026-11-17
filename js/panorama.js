@@ -46,7 +46,11 @@
     return new Promise(function (res, rej) {
       var url = URL.createObjectURL(file), img = new Image();
       img.onload = function () { res({ img: img, url: url }); };
-      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Görsel açılamadı (desteklenmeyen biçim olabilir; HEIC ise telefonda "En Uyumlu" ayarını seçin)')); };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        var heic = /hei[cf]/i.test(file.type || '') || /\.hei[cf]$/i.test(file.name || '');
+        rej(new Error(heic ? 'Bu fotoğraf HEIC biçiminde ve bu tarayıcı açamadı. iPhone\'da Ayarlar › Kamera › Biçimler › “En Uyumlu”yu seçip yeniden çekin ya da fotoğrafı Safari ile seçin (Safari genelde otomatik JPEG\'e çevirir).' : 'Görsel açılamadı. Desteklenmeyen bir biçim olabilir; JPEG veya PNG deneyin.'));
+      };
       img.src = url;
     });
   }
@@ -62,16 +66,16 @@
     secenek = secenek || {};
     return Promise.all([xmpOku(file), resimYukle(file)]).then(function (r) {
       var xmp = r[0], img = r[1].img, G = img.naturalWidth, Y = img.naturalHeight;
-      var a = analiz(G, Y, xmp, secenek.dikeyAci);
-      if (secenek.zorlaTur === 'kure') a = { tur: 'kure', haov: 360, vaov: 180, vOffset: 0, kaynak: 'elle' };
-      if (secenek.zorlaTur === 'genis' && a.tur === 'kure') {
+      var a = secenek.meta ? Object.assign({ kaynak: 'dikis' }, secenek.meta) : analiz(G, Y, xmp, secenek.dikeyAci);
+      if (!secenek.meta && secenek.zorlaTur === 'kure') a = { tur: 'kure', haov: 360, vaov: 180, vOffset: 0, kaynak: 'elle' };
+      if (!secenek.meta && secenek.zorlaTur === 'genis' && a.tur === 'kure') {
         var d = secenek.dikeyAci || VARSAYILAN_DIKEY, h = Math.min(360, (G / Y) * d);
         a = { tur: 'genis', haov: r1(h > 345 ? 360 : h), vaov: d, vOffset: 0, kaynak: 'elle' };
       }
       var maks = a.tur === 'kure' ? MAKS_KURE : MAKS_GENIS;
       var dg = Math.min(G, maks), dy = Math.round(dg * Y / G);
       var uyari = '';
-      if (a.tur === 'genis' && a.haov < 100) uyari = 'Bu fotoğraf dar görünüyor (yaklaşık ' + Math.round(a.haov) + '°). Daha iyi sonuç için telefonda Panorama modunda odanın etrafında dönerek çekin.';
+      if (!secenek.meta && a.tur === 'genis' && a.haov < 100) uyari = 'Bu fotoğraf dar görünüyor (yaklaşık ' + Math.round(a.haov) + '°). Daha iyi sonuç için telefonda Panorama modunda odanın etrafında dönerek çekin.';
       return Promise.all([
         ciz(img, 0, 0, G, Y, dg, dy, KALITE),
         kucukResim(img, G, Y)
@@ -127,8 +131,8 @@
   function propertyOlustur(t) {
     var il = t.ilan || {}, ss = t.sahneler || [];
     var p = {
-      id: t.slug || ST.slugify(il.baslik), tip: il.tip === 'ticari' ? 'ticari' : 'daire', durum: il.durum || 'Satılık',
-      baslik: il.baslik || 'Başlıksız ilan', aciklama: il.aciklama || '',
+      id: t.slug || ST.slugify(il.baslik || t.ad) || t.id, tip: il.tip === 'ticari' ? 'ticari' : 'daire', durum: il.durum || 'Satılık',
+      baslik: il.baslik || t.ad || 'Başlıksız ilan', aciklama: il.aciklama || '',
       fiyat: il.fiyat === '' || il.fiyat == null ? null : Number(il.fiyat), paraBirimi: il.paraBirimi || 'TL',
       konum: il.konum || {}, bilgiler: il.bilgiler || {}, ozellikler: il.ozellikler || [], katPlani: '',
       kapak: ss[0] ? ss[0].id + '_thumb.jpg' : '', ilkSahne: ss[0] ? ss[0].id : '',

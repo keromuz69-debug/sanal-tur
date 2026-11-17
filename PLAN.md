@@ -43,10 +43,12 @@
 ---
 
 ## 2b. Sadece telefonla (360° kamera olmadan)
-`cek.html` (ana sayfada **Yeni Tur Oluştur**) telefonun kendi **Panorama** modunu kullanır:
-- **iPhone:** Kamera › modları kaydırıp **PANO**. Telefonu dik tutun, okun yönünde yavaşça dönün (iPhone en fazla ~240–270° çeker).
-- **Android:** Kamera › Diğer/Daha fazla › **Panorama** (Samsung, Xiaomi, Pixel'de isimler değişebilir).
-- “Panorama Çek” butonu bazı telefonlarda kamerayı **sadece normal fotoğraf modunda** açar (özellikle iPhone Safari). Bu durumda panoramayı Kamera uygulamasında çekip **Galeriden Seç** kullanın.
+`cek.html` (ana sayfada **Yeni Tur – Hemen Çek**) artık **kendi panorama çekim modunu** kullanır; telefonun PANO moduna bağlı değildir:
+- Odanın ortasında durun, telefonu dik ve göğüs hizasında tutun; **sadece gövdenizi** sağa çevirin (telefon aynı noktada kalsın – yer değiştirirseniz yakın eşyalarda ek yeri oluşur).
+- Ortadaki çizgi **yeşil** iken ve telefon sabitken kareler **kendiliğinden** çekilir (~30°'de bir, tam tur ≈ 12 kare). Hızlı dönerseniz “Biraz fazla döndünüz” uyarısı çıkar.
+- Oda bitince arka planda birleştirilir; **Sonraki Odayı Çek** ile devam edin. Bilgileri sonra girin.
+- Işıkları açın, perdeleri açın, kadrajda insan olmasın; sadece düz beyaz duvar gören karelerden kaçının (eşleşme için mobilya/pencere gerekir).
+- Alternatif: **iPhone** Kamera › **PANO** (ok çizgide kalacak şekilde dönün) / **Android** Kamera › Panorama ile çekip **Galeriden Seç**. iPhone HEIC fotoğrafları Safari'de genelde otomatik JPEG'e çevrilir; açılmazsa Ayarlar › Kamera › Biçimler › “En Uyumlu”.
 - Sonuç tam küre değildir: tavan ve zemin görünmez, sadece etrafa dönülerek bakılır. Müşteri sunumu için yeterli; daha etkileyici sonuç için 360° kamera önerilir.
 
 ## 3. Çekimden yayına iş akışı (bir ilan ≈ 30–45 dk)
@@ -121,7 +123,8 @@
 - [x] Telefon panoraması (kısmi panorama) desteği
 - [x] Taslağı yayınlamadan müşteriye telefonda tam ekran gösterme
 - [ ] Bulutta kayıt + tek dokunuşla yayınlama (ücretsiz Supabase/Firebase ile; kullanıcı hesabı gerekir)
-- [ ] Deneysel: tarayıcı içinde kamerayla rehberli çekim ve birleştirme (yapılmadı – telefonun kendi panorama modu daha kaliteli)
+- [x] Uygulama içi rehberli panorama çekimi (otomatik deklanşör, yön sensörü, silik hizalama şeridi) + tarayıcıda OpenCV.js ile birleştirme (v1.6)
+- [x] Önce çekim, sonra bilgi: “Yeni Tur – Hemen Çek”, art arda oda çekimi, arka planda birleştirme kuyruğu, “Bilgiler eksik” rozeti (v1.6)
 
 ### v2 (pazarlama gücü)
 - **Markalı filigran / logo** panoramanın zemin noktasında (kamera sopasının göründüğü yeri logolu bir daire kaplar)
@@ -147,7 +150,9 @@
 ## 7. Bilinen sınırlamalar (v1)
 - Sayfayı dosyadan çift tıklayarak açmak çalışmaz; yerel sunucu (`baslat.bat`) veya hosting gerekir.
 - “Çek ve Kaydet” taslakları **sadece o telefonun tarayıcısında** saklanır; tarayıcı verisi temizlenirse veya başka telefona geçilirse görünmez. Gelişmiş düzenleyicide (bilgisayar) otomatik kayıt yok.
-- Telefon panoramasının yatay açısı tahmindir (dikey açı ~65° varsayılır); görüntü basık/uzamış görünürse “Gelişmiş › dikey açı” ile ayarlanır.
+- Uygulama içi çekim tam küre değildir: dikey görüş ~55–60° (tavan/zemin görünmez). Telefonu aynı noktada döndürmezseniz (paralaks) yakın eşyalarda ek yeri görülebilir; düz beyaz duvarlarda eşleşme zayıflar, o geçişler sensör açısıyla yerleştirilir.
+- iPhone Safari: kamera için https gerekir (GitHub Pages uygun), ilk seferde kamera ve “Hareket ve Yön” izni sorulur; reddedilirse Ayarlar › Safari'den açılmalı. Birleştirme sırasında OpenCV (~10 MB) bir kez indirilir; bellek için kareler 1600 px, çıktı ≤16 MP ile sınırlıdır.
+- Galeriden eklenen telefon panoramasının yatay açısı tahmindir (dikey açı ~65° varsayılır); görüntü basık/uzamış görünürse “Gelişmiş › dikey açı” ile ayarlanır.
 - ZIP'i siteye eklemek manuel (kopyala + yeniden yükle). v2'de Netlify/GitHub'a tek tık yükleme eklenebilir.
 - Google Harita gömme, Google'ın anahtarsız “embed” adresini kullanır; Google bu davranışı değiştirirse “Google Haritalar'da aç” butonu çalışmaya devam eder.
 - Portföy sayfası tüm ilanların JSON'unu yükler; yüzlerce ilana çıkınca sayfalama gerekir.

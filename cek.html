@@ -16,9 +16,9 @@
   <span class="kucuk" id="kayitDurum" aria-live="polite"></span>
 </header>
 <nav class="adimlar" id="adimlar" hidden>
-  <button class="a" data-adim="1"><span>1 · Bilgiler</span></button>
-  <button class="a" data-adim="2"><span>2 · Odalar</span></button>
-  <button class="a" data-adim="3"><span>3 · Önizle</span></button>
+  <button class="a" data-adim="1"><span>1 · Çek</span></button>
+  <button class="a" data-adim="2"><span>2 · Önizle</span></button>
+  <button class="a" data-adim="3"><span>3 · Bilgiler</span></button>
   <button class="a" data-adim="4"><span>4 · Gönder</span></button>
 </nav>
 
@@ -27,7 +27,7 @@
   <section class="adim" id="ekran0">
     <h2 class="baslik-k">Turlarım</h2>
     <p class="yardim">Turlarınız bu telefonda otomatik kaydedilir. Uygulamayı kapatsanız da kaybolmaz.</p>
-    <button class="btn btn-ana btn-buyuk btn-blok" id="btnYeni">＋ Yeni Tur Oluştur</button>
+    <button class="btn btn-ana btn-buyuk btn-blok" id="btnYeni">📷 Yeni Tur – Hemen Çek</button>
     <div class="bolum-baslik">Kayıtlı taslaklar</div>
     <div id="taslakListe"></div>
     <details class="gelismis"><summary>Gelişmiş</summary><div class="ic">
@@ -39,7 +39,7 @@
   <!-- ADIM 1 -->
   <section class="adim" id="ekran1">
     <h2 class="baslik-k">İlan bilgileri</h2>
-    <p class="yardim">Sadece temel bilgiler yeterli. Diğerlerini sonra da ekleyebilirsiniz.</p>
+    <p class="yardim">Hepsi isteğe bağlı. İsterseniz atlayın; daha sonra <b>Turlarım</b>'dan istediğiniz zaman ekleyebilirsiniz.</p>
     <div class="secim-kartlari" id="tipSec">
       <button type="button" data-tip="daire"><span class="e">🏠</span>Daire / Konut<small>Ev, villa, rezidans</small></button>
       <button type="button" data-tip="ticari"><span class="e">🏢</span>Dükkan / Ofis<small>Ticari mülk</small></button>
@@ -67,15 +67,13 @@
   <!-- ADIM 2 -->
   <section class="adim" id="ekran2">
     <h2 class="baslik-k">Odaları çekin</h2>
-    <p class="yardim">Her oda için bir panorama ekleyin. Sırası, turdaki gezinti sırası olur.</p>
+    <p class="yardim">Odaları art arda çekin; her oda arka planda birleştirilir. Sırası, turdaki gezinti sırası olur.</p>
     <div id="odaListe"></div>
     <div class="cekim-kutusu">
       <h3 id="siradakiBaslik">İlk oda</h3>
-      <p class="kucuk" style="margin:0 0 12px">Oda adını seçin, sonra panoramayı çekin.</p>
-      <div class="cipler" id="odaAdCipler" style="margin-bottom:10px"></div>
-      <input class="girdi" id="odaAd" placeholder="Oda adı (örn. Salon)" autocomplete="off" style="margin-bottom:12px">
-      <label class="btn btn-ana btn-buyuk btn-blok" for="dosyaKamera">📷 Panorama Çek</label>
-      <input type="file" id="dosyaKamera" accept="image/*" capture="environment" hidden>
+      <p class="kucuk" style="margin:0 0 12px">Oda adını çekim ekranında seçebilirsiniz; sonra da değiştirebilirsiniz.</p>
+      <button type="button" class="btn btn-ana btn-buyuk btn-blok" id="btnPanoramaCek">📷 Panorama Çek</button>
+      <p class="kucuk" style="margin:6px 0 0;text-align:center">Uygulama sizi adım adım yönlendirir, kareleri kendisi birleştirir.</p>
       <label class="btn btn-buyuk btn-blok" for="dosyaGaleri" style="margin-top:10px">🖼 Galeriden Seç</label>
       <input type="file" id="dosyaGaleri" accept="image/*" multiple hidden>
       <details class="gelismis"><summary>Gelişmiş</summary><div class="ic">
@@ -83,15 +81,23 @@
         <label class="alan">Telefon panoraması dikey açısı: <b id="dikeyDeger">65°</b><input type="range" id="dikeyAci" min="45" max="100" value="65"><small>Görüntü basık görünüyorsa artırın, uzamış görünüyorsa azaltın.</small></label>
       </div></details>
     </div>
-    <details class="yardim-kutu" style="margin-top:14px" id="nasilCekilir"><summary>📱 Telefonda panorama nasıl çekilir?</summary>
+    <details class="yardim-kutu pano-kart" style="margin-top:14px" id="iphonePano"><summary>📲 Alternatif: iPhone'un kendi PANO modu</summary>
+      <div class="uc-adim">
+        <div><b>1</b><span class="ik">📷</span><p><b>Kamera</b> uygulamasını açın</p></div>
+        <div><b>2</b><span class="ik">↔️</span><p>Alttaki modlardan <b>PANO</b>'yu seçin</p></div>
+        <div><b>3</b><span class="ik">➡️</span><p>Deklanşöre basın, <b>ok çizgide kalacak</b> şekilde yavaşça dönün</p></div>
+      </div>
+      <p class="kucuk" style="margin:10px 0 12px">Sonra buraya dönüp <b>🖼 Galeriden Seç</b>'e dokunun ve panoramayı seçin. (PANO en fazla ~240° çeker; tam tur için yukarıdaki <b>Panorama Çek</b> daha iyidir.)</p>
+    </details>
+    <details class="yardim-kutu" style="margin-top:14px" id="nasilCekilir"><summary>📱 İyi bir panorama için ipuçları</summary>
       <ol>
-        <li><b>iPhone:</b> Kamera uygulamasında alttaki modları kaydırıp <b>PANO</b>'yu seçin.</li>
-        <li><b>Android:</b> Kamera › <b>Diğer / Daha fazla</b> › <b>Panorama</b>.</li>
-        <li>Odanın ortasında durun, telefonu dik ve göğüs hizasında tutun.</li>
-        <li>Deklanşöre basın, okun gösterdiği yönde <b>yavaşça</b> dönün. Mümkünse tam tur atın.</li>
-        <li>Işıkları ve perdeleri açın. Kadrajda insan olmasın.</li>
+        <li>Odanın <b>ortasında</b> durun. Ayaklarınızı değil, <b>sadece gövdenizi</b> çevirin; telefon hep aynı noktada kalsın.</li>
+        <li>Telefonu <b>dik</b> ve göğüs hizasında tutun. Ortadaki çizgi <b>yeşil</b> olsun.</li>
+        <li><b>Yavaşça sağa</b> dönün. Telefon her ~30°'de kendisi çeker (yaklaşık 12 kare). Soldaki silik şerit, canlı görüntüyle çakışmalı.</li>
+        <li>Tam tur zorunlu değil: istediğiniz an <b>Bitir</b>'e basın.</li>
+        <li>Işıkları ve perdeleri açın, kadrajda insan olmasın. Düz beyaz duvara bakan karelerde birleştirme zorlaşır; kadrajda biraz mobilya/pencere olsun.</li>
       </ol>
-      <p class="kucuk" style="margin:0 0 12px">💡 “Panorama Çek” bazı telefonlarda kamerayı sadece normal fotoğraf modunda açar. O zaman panoramayı Kamera uygulamasında çekip <b>Galeriden Seç</b>'e dokunun.</p>
+      <p class="kucuk" style="margin:0 0 12px">💡 Telefonunuzun kendi Panorama modunda çektiğiniz veya 360° kamera fotoğrafını <b>Galeriden Seç</b> ile de ekleyebilirsiniz.</p>
     </details>
   </section>
 
@@ -151,6 +157,7 @@
 
 <div class="alt-cubuk" id="altCubuk" hidden><div class="ic">
   <button class="geri" id="btnGeri">←</button>
+  <button class="btn-sade" id="btnAtla" hidden>Atla</button>
   <button class="btn-ana" id="btnIleri">Devam</button>
 </div></div>
 
@@ -164,6 +171,8 @@
 <script src="js/common.js"></script>
 <script src="js/depo.js"></script>
 <script src="js/panorama.js"></script>
+<script src="js/dikis.js"></script>
+<script src="js/cekim.js"></script>
 <script src="js/cek.js"></script>
 </body>
 </html>

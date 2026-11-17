@@ -8,6 +8,8 @@
   var urller = {};         // sahneId -> {pano, kucuk}
   var onizViewer = null, modalViewer = null, onizSecili = 0, yerlestirMod = null;
   var kayitZ = null;
+  var SIRA = [0, 2, 3, 1, 4];   // adım -> ekran (çekim önce, bilgiler sonra)
+  var kuyruk = [], kuyrukCalisiyor = false, aktifCekim = null, odaUyari = {};
   var ODA_ADLARI = {
     daire: ['Giriş', 'Salon', 'Mutfak', 'Yatak Odası', 'Çocuk Odası', 'Banyo', 'WC', 'Balkon', 'Teras', 'Koridor'],
     ticari: ['Cephe / Vitrin', 'Giriş', 'Ana Alan', 'Ofis', 'Toplantı Odası', 'Mutfak', 'WC', 'Depo', 'Otopark']
@@ -20,7 +22,7 @@
   /* ---------- Yönlendirme ---------- */
   function rota() {
     var h = new URLSearchParams(location.hash.slice(1));
-    if (location.hash === '#yeni') return yeniTaslak();
+    if (location.hash === '#yeni') return yeniTaslak(false);
     var id = h.get('t');
     if (id) {
       var a = +h.get('a') || 1;
@@ -36,33 +38,38 @@
 
   function git(n, hashtenGeldi) {
     if (n > 1 && !t) n = 0;
-    if (n > 2 && t && !t.sahneler.length) { toast('Önce en az bir oda ekleyin'); n = 2; }
+    if ((n === 2 || n === 4) && t && !t.sahneler.length) { toast(kuyruk.length ? 'Odalar hâlâ hazırlanıyor, birazdan tekrar deneyin' : 'Önce en az bir oda çekin'); n = 1; }
     adim = n;
     if (!hashtenGeldi) { var h = n === 0 ? '' : '#t=' + t.id + '&a=' + n; if (location.hash !== h) { history.pushState(null, '', h || location.pathname); } }
     $$('.adim').forEach(function (s) { s.classList.remove('acik'); });
-    $('ekran' + n).classList.add('acik');
+    var e = SIRA[n];
+    $('ekran' + e).classList.add('acik');
     $('adimlar').hidden = n === 0; $('altCubuk').hidden = n === 0;
     $$('#adimlar .a').forEach(function (b) { var k = +b.dataset.adim; b.classList.toggle('tamam', k < n); b.classList.toggle('simdi', k === n); });
-    $('ustBaslik').textContent = n === 0 ? 'Turlarım' : (t.ilan.baslik || 'Yeni tur');
+    $('ustBaslik').textContent = n === 0 ? 'Turlarım' : turAdi(t);
     $('btnUstGeri').href = n === 0 ? 'index.html' : '#';
-    $('btnIleri').textContent = ['', 'Devam: Odaları çek →', 'Devam: Önizle →', 'Devam: Gönder →', '✓ Bitti, Turlarıma dön'][n];
-    if (n !== 3) onizKapat();
-    if (n === 0) listeCiz();
-    if (n === 1) bilgiDoldur();
-    if (n === 2) odalarCiz();
-    if (n === 3) onizAc();
-    if (n === 4) gonderCiz();
+    $('btnIleri').textContent = ['', 'Devam: Önizle →', 'Devam: İlan bilgileri →', 'Devam: Gönder →', '✓ Bitti, Turlarıma dön'][n];
+    $('btnAtla').hidden = n !== 3;
+    if (e !== 3) onizKapat();
+    if (e === 0) listeCiz();
+    if (e === 1) bilgiDoldur();
+    if (e === 2) odalarCiz();
+    if (e === 3) onizAc();
+    if (e === 4) gonderCiz();
     window.scrollTo(0, 0);
   }
   $('btnUstGeri').addEventListener('click', function (e) { if (adim > 0) { e.preventDefault(); git(adim > 1 ? adim - 1 : 0); } });
   $('btnGeri').addEventListener('click', function () { git(Math.max(0, adim - 1)); });
   $('btnIleri').addEventListener('click', function () {
-    if (adim === 1 && !(t.ilan.baslik || '').trim()) { $('fBaslik').focus(); toast('Lütfen bir ilan başlığı yazın'); return; }
-    if (adim === 2 && !t.sahneler.length) { toast('En az bir oda ekleyin'); return; }
+    if (adim === 1 && !t.sahneler.length) { toast(kuyruk.length ? 'Oda hazırlanıyor, birazdan devam edebilirsiniz' : 'Önce en az bir oda çekin'); return; }
     if (adim === 4) return git(0);
     git(adim + 1);
   });
-  $$('#adimlar .a').forEach(function (b) { b.addEventListener('click', function () { if (adim === 1 && !(t.ilan.baslik || '').trim()) { toast('Önce ilan başlığını yazın'); return; } git(+b.dataset.adim); }); });
+  $$('#adimlar .a').forEach(function (b) { b.addEventListener('click', function () { git(+b.dataset.adim); }); });
+  $('btnAtla').addEventListener('click', function () { git(4); });
+  function turAdi(x) { return (x.ilan.baslik || '').trim() || x.ad || 'Yeni tur'; }
+  function bilgiEksik(x) { var il = x.ilan || {}; return !(il.baslik || '').trim() || !il.fiyat || !((il.konum || {}).ilce || '').trim(); }
+  window.addEventListener('beforeunload', function (e) { if (kuyruk.length) { e.preventDefault(); e.returnValue = ''; } });
 
   /* ---------- Kayıt ---------- */
   function kaydet(hemen) {
@@ -73,10 +80,14 @@
     if (hemen) return yap();
     kayitZ = setTimeout(yap, 400); return Promise.resolve();
   }
-  function yeniTaslak() {
-    t = { id: Depo.yeniId(), olusturma: Date.now(), slug: '', slugElle: false, ilan: { tip: 'daire', durum: 'Satılık', baslik: '', fiyat: '', paraBirimi: 'TL', konum: { il: 'İstanbul' }, bilgiler: {}, ozellikler: [] }, sahneler: [] };
+  function yeniTaslak(hemen) {
+    var z = new Date();
+    var ad = 'Yeni Tur – ' + z.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' }) + ' ' + z.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+    t = { id: Depo.yeniId(), ad: ad, olusturma: Date.now(), slug: '', slugElle: false, ilan: { tip: 'daire', durum: 'Satılık', baslik: '', fiyat: '', paraBirimi: 'TL', konum: { il: 'İstanbul' }, bilgiler: {}, ozellikler: [] }, sahneler: [] };
     urller = {};
-    return kaydet(true).then(function () { history.replaceState(null, '', '#t=' + t.id + '&a=1'); git(1, true); });
+    history.replaceState(null, '', '#t=' + t.id + '&a=1'); git(1, true);
+    cekimBaslat(null, hemen); // hemen=true: dokunuş içinde -> izinler doğrudan istenir
+    return kaydet(true);
   }
   function urlleriYukle() {
     Object.keys(urller).forEach(function (k) { URL.revokeObjectURL(urller[k].pano); URL.revokeObjectURL(urller[k].kucuk); });
@@ -96,10 +107,12 @@
       el.innerHTML = '';
       l.forEach(function (x) {
         var d = document.createElement('div'); d.className = 'taslak';
-        d.innerHTML = '<div class="resim">🏠</div><div class="yazi"><b>' + ST.esc(x.ilan.baslik || 'Başlıksız tur') + '</b><small>' + x.sahneler.length + ' oda · ' + zamanYaz(x.guncelleme) + '</small></div>' +
+        d.innerHTML = '<div class="resim">🏠</div><div class="yazi"><b>' + ST.esc(turAdi(x)) + '</b><small>' + x.sahneler.length + ' oda · ' + zamanYaz(x.guncelleme) + '</small>' +
+          (bilgiEksik(x) ? '<span class="rozet-eksik" role="button" tabindex="0">✎ Bilgiler eksik</span>' : '') + '</div>' +
           '<button class="btn-ikon btn-sade" aria-label="Sil">🗑</button>';
-        d.querySelector('.yazi').addEventListener('click', function () { location.hash = 't=' + x.id + '&a=' + (x.sahneler.length ? 2 : 1); });
-        d.querySelector('.resim').addEventListener('click', function () { location.hash = 't=' + x.id + '&a=' + (x.sahneler.length ? 2 : 1); });
+        var ac = function (e) { var r = e && e.target.closest('.rozet-eksik'); location.hash = 't=' + x.id + '&a=' + (r ? 3 : (x.sahneler.length ? 2 : 1)); };
+        d.querySelector('.yazi').addEventListener('click', ac);
+        d.querySelector('.resim').addEventListener('click', ac);
         d.querySelector('button').addEventListener('click', function () { taslakSil(x); });
         if (x.sahneler[0]) Depo.dosyaAl(x.id + '/' + x.sahneler[0].id + '_k').then(function (b) { if (b) { var r = d.querySelector('.resim'); r.style.backgroundImage = 'url(' + URL.createObjectURL(b) + ')'; r.textContent = ''; } });
         el.appendChild(d);
@@ -112,10 +125,10 @@
     return new Date(ms).toLocaleDateString('tr-TR');
   }
   function taslakSil(x) {
-    if (!confirm('“' + (x.ilan.baslik || 'Başlıksız tur') + '” silinsin mi? Bu işlem geri alınamaz.')) return;
+    if (!confirm('“' + turAdi(x) + '” silinsin mi? Bu işlem geri alınamaz.')) return;
     Depo.taslakSil(x.id).then(function () { toast('Silindi'); if (t && t.id === x.id) { t = null; git(0); } else listeCiz(); });
   }
-  $('btnYeni').addEventListener('click', function () { yeniTaslak(); });
+  $('btnYeni').addEventListener('click', function () { yeniTaslak(true); });
   ST.getJSON('tours/index.json').then(function (ix) {
     (ix.ilanlar || []).forEach(function (s) { var o = document.createElement('option'); o.value = s; o.textContent = s; $('yayindanAl').appendChild(o); });
   }).catch(function () {});
@@ -176,7 +189,7 @@
   });
   $('ekran1').addEventListener('input', function (e) {
     var il = t.ilan, el = e.target; il.konum = il.konum || {};
-    if (el.id === 'fBaslik') { il.baslik = el.value; $('ustBaslik').textContent = el.value || 'Yeni tur'; if (!t.slugElle) t.slug = ST.slugify(el.value); }
+    if (el.id === 'fBaslik') { il.baslik = el.value; $('ustBaslik').textContent = turAdi(t); if (!t.slugElle) t.slug = ST.slugify(el.value); }
     else if (el.id === 'fFiyat') { var n = sayiAl(el.value); il.fiyat = n; el.value = n ? new Intl.NumberFormat('tr-TR').format(n) : ''; fiyatOn(); }
     else if (el.id === 'fIlce') il.konum.ilce = el.value;
     else if (el.id === 'fMahalle') il.konum.mahalle = el.value;
@@ -203,18 +216,22 @@
       d.querySelector('[data-i=sil]').addEventListener('click', function () { odaSil(i); });
       el.appendChild(d);
     });
-    $('siradakiBaslik').textContent = t.sahneler.length ? (t.sahneler.length + 1) + '. oda' : 'İlk oda';
-    var kullanilan = t.sahneler.map(function (s) { return s.ad; });
-    var oneriler = ODA_ADLARI[t.ilan.tip].filter(function (a) { return kullanilan.indexOf(a) < 0; });
-    $('odaAdCipler').innerHTML = oneriler.slice(0, 8).map(function (a, i) { return '<button type="button"' + (i === 0 ? ' class="secili"' : '') + '>' + a + '</button>'; }).join('');
-    $('odaAd').value = oneriler[0] || '';
+    kuyruk.forEach(function (k) {
+      var d = document.createElement('div'); d.className = 'oda kuyrukta';
+      d.innerHTML = '<div class="resim">' + (k.durum === 'hata' ? '⚠' : '<div class="donen"></div>') + '</div><div class="yazi"><b>' + ST.esc(k.ad) + '</b><div class="sira">' +
+        (k.durum === 'hata' ? 'Birleştirilemedi: ' + ST.esc(k.hata) : (k.durum === 'isleniyor' ? 'Birleştiriliyor… %' + (k.yuzde || 0) : 'Sırada bekliyor…')) + '</div></div>' +
+        (k.durum === 'hata' ? '<div class="islemler"><button class="btn-ikon btn-sade" data-i="tekrar" aria-label="Tekrar çek">↺</button><button class="btn-ikon btn-sade" data-i="sil" aria-label="Sil">🗑</button></div>' : '');
+      if (k.durum === 'hata') {
+        d.querySelector('[data-i=tekrar]').addEventListener('click', function () { kuyruk.splice(kuyruk.indexOf(k), 1); cekimBaslat(null, true, k.ad); });
+        d.querySelector('[data-i=sil]').addEventListener('click', function () { kuyruk.splice(kuyruk.indexOf(k), 1); odalarCiz(); });
+      }
+      k.el = d; el.appendChild(d);
+    });
+    var toplam = t.sahneler.length + kuyruk.length;
+    $('siradakiBaslik').textContent = toplam ? (toplam + 1) + '. oda' : 'İlk oda';
+    $('btnPanoramaCek').textContent = toplam ? '📷 Sonraki Odayı Çek' : '📷 Panorama Çek';
   }
   function okSifirla() { t.sahneler.forEach(function (s) { s.ok = {}; }); }
-  $('odaAdCipler').addEventListener('click', function (e) {
-    var b = e.target.closest('button'); if (!b) return;
-    $$('#odaAdCipler button').forEach(function (x) { x.classList.toggle('secili', x === b); });
-    $('odaAd').value = b.textContent;
-  });
   $('dikeyAci').addEventListener('input', function () { $('dikeyDeger').textContent = this.value + '°'; });
   function odaSil(i) {
     var s = t.sahneler[i];
@@ -223,41 +240,96 @@
     Depo.dosyaSil(t.id + '/' + s.id); Depo.dosyaSil(t.id + '/' + s.id + '_k');
     kaydet(true); odalarCiz(); modalKapat();
   }
-  ['dosyaKamera', 'dosyaGaleri'].forEach(function (id) {
-    $(id).addEventListener('change', function () {
-      var dosyalar = Array.prototype.slice.call(this.files); this.value = '';
-      if (dosyalar.length) dosyalariIsle(dosyalar, null);
-    });
+  $('dosyaGaleri').addEventListener('change', function () {
+    var dosyalar = Array.prototype.slice.call(this.files); this.value = '';
+    if (dosyalar.length) dosyalariIsle(dosyalar, null);
   });
+  $('btnPanoramaCek').addEventListener('click', function () { cekimBaslat(null, true); });
+  function varsayilanAd() { return 'Oda ' + (t.sahneler.length + kuyruk.filter(function (k) { return k.degistirId == null; }).length + 1); }
+  // Uygulama içi çekim. degistirIdx: mevcut odayı yeniden çek. hemen: dokunuş içinde çağrıldı.
+  function cekimBaslat(degistirIdx, hemen, onAd) {
+    var degistir = degistirIdx != null ? t.sahneler[degistirIdx] : null;
+    var sonEklenen = null;
+    aktifCekim = STCekim.ac({
+      hemen: !!hemen, tekOda: !!degistir, ad: degistir ? degistir.ad : (onAd || ''), varsayilanAd: varsayilanAd,
+      odaBitti: function (o) {
+        sonEklenen = { id: Depo.yeniId(), ad: o.ad, kareler: o.kareler, degistirId: degistir ? degistir.id : null, durum: 'bekliyor', yuzde: 0 };
+        kuyruk.push(sonEklenen); odalarCiz(); kuyrukIsle();
+      },
+      tekrar: function () { // panelde "Bu odayı tekrar çek": son çekileni sıradan çıkar
+        if (!sonEklenen) return;
+        var i = kuyruk.indexOf(sonEklenen);
+        if (i > -1) { if (sonEklenen.durum === 'isleniyor') sonEklenen.iptal = true; else kuyruk.splice(i, 1); }
+        else if (sonEklenen.sahneId) { var j = t.sahneler.map(function (x) { return x.id; }).indexOf(sonEklenen.sahneId); if (j > -1) { var x = t.sahneler.splice(j, 1)[0]; Depo.dosyaSil(t.id + '/' + x.id); Depo.dosyaSil(t.id + '/' + x.id + '_k'); okSifirla(); kaydet(true); } }
+        odalarCiz();
+      },
+      kapandi: function () { aktifCekim = null; odalarCiz(); if (kuyruk.length) toast('Odalar arka planda hazırlanıyor…'); }
+    });
+  }
+  function kuyrukIsle() {
+    if (kuyrukCalisiyor) return;
+    var k = kuyruk.filter(function (x) { return x.durum === 'bekliyor'; })[0];
+    if (!k) return;
+    kuyrukCalisiyor = true; k.durum = 'isleniyor';
+    var durumYaz = function () {
+      if (k.el) { var e = k.el.querySelector('.sira'); if (e) e.textContent = 'Birleştiriliyor… %' + k.yuzde; }
+      if (aktifCekim) aktifCekim.durum(k.ad + ': birleştiriliyor… %' + k.yuzde + '. Siz sonraki odaya geçebilirsiniz.');
+    };
+    durumYaz();
+    STDikis.birlestir(k.kareler, function (y) { k.yuzde = Math.round(y); durumYaz(); }).then(function (r) {
+      if (k.iptal) return;
+      var f = new File([r.blob], 'panorama.jpg', { type: 'image/jpeg' });
+      return STP.isle(f, { meta: { tur: 'genis', haov: r.haov, vaov: r.vaov, vOffset: r.vOffset } }).then(function (p) {
+        var idx = k.degistirId != null ? t.sahneler.map(function (x) { return x.id; }).indexOf(k.degistirId) : null;
+        return odaYerlestir(p, k.ad, idx != null && idx > -1 ? idx : null).then(function (s) {
+          k.sahneId = s.id;
+          var u = (r.uyarilar || []).join(' '); if (u) odaUyari[s.id] = u; else delete odaUyari[s.id];
+          return kaydet(true).then(function () { return s; });
+        });
+      });
+    }).then(function (s) {
+      kuyruk.splice(kuyruk.indexOf(k), 1); k.kareler = null;
+      if (s) { if (aktifCekim) aktifCekim.durum('✓ ' + s.ad + ' hazır ve kaydedildi.'); else toast('✓ ' + s.ad + ' hazır'); }
+    }).catch(function (e) {
+      console.error(e); k.durum = 'hata'; k.hata = e.message || String(e);
+      if (aktifCekim) aktifCekim.durum('⚠ ' + k.ad + ' birleştirilemedi. Odalar listesinden tekrar çekebilirsiniz.');
+    }).then(function () {
+      kuyrukCalisiyor = false; if (!aktifCekim || SIRA[adim] === 2) odalarCiz(); kuyrukIsle();
+    });
+  }
+  window.__kuyruk = kuyruk;
+  // Test kancası: çekilmiş kareleri (blob + yön) sıraya ekler, gerçek çekimle aynı yoldan birleştirir
+  window.__odaKuyrugaEkle = function (kareler, ad) {
+    kuyruk.push({ id: Depo.yeniId(), ad: ad || varsayilanAd(), kareler: kareler, degistirId: null, durum: 'bekliyor', yuzde: 0 });
+    odalarCiz(); kuyrukIsle();
+  };
+  window.__cekimBaslat = cekimBaslat;
   function benzersizId(ad) {
     var b = ST.slugify(ad) || 'oda', id = b, n = 2;
     while (t.sahneler.some(function (s) { return s.id === id; })) id = b + '-' + n++;
     return id;
   }
-  // degistirIdx: yeniden çekimde mevcut odanın görselini değiştirir
-  function dosyalariIsle(dosyalar, degistirIdx) {
-    var secenek = { zorlaTur: $('zorlaTur').value, dikeyAci: +$('dikeyAci').value };
-    var zincir = Promise.resolve(), son = -1, uyarilar = [];
+  // İşlenmiş panoramayı yeni odaya ya da (degistirIdx) mevcut odaya yerleştirir ve görseli kaydeder
+  function odaYerlestir(r, ad, degistirIdx) {
+    var s;
+    if (degistirIdx != null) { s = t.sahneler[degistirIdx]; s.yaw = 0; s.pitch = 0; s.hfov = 100; s.bilgiNoktalari = []; s.ok = {}; }
+    else { s = { id: benzersizId(ad), ad: ad, yaw: 0, pitch: 0, hfov: 100, bilgiNoktalari: [], ok: {} }; t.sahneler.push(s); }
+    s.tur = r.tur; s.haov = r.haov; s.vaov = r.vaov; s.vOffset = r.vOffset; s.gen = r.gen; s.yuk = r.yuk;
+    if (urller[s.id]) { URL.revokeObjectURL(urller[s.id].pano); URL.revokeObjectURL(urller[s.id].kucuk); }
+    urller[s.id] = { pano: URL.createObjectURL(r.blob), kucuk: URL.createObjectURL(r.kucuk) };
+    return Promise.all([Depo.dosyaKaydet(t.id + '/' + s.id, r.blob), Depo.dosyaKaydet(t.id + '/' + s.id + '_k', r.kucuk)]).then(function () { return s; });
+  }
+  // Galeriden seçilen dosyalar. degistirIdx: mevcut odanın görselini değiştirir
+  function dosyalariIsle(dosyalar, degistirIdx, ekSecenek, ekUyari) {
+    var secenek = ekSecenek || { zorlaTur: $('zorlaTur').value, dikeyAci: +$('dikeyAci').value };
+    var zincir = Promise.resolve(), son = -1, uyarilar = ekUyari ? [ekUyari] : [];
     yukleniyor(true, 'Panorama hazırlanıyor…');
     dosyalar.forEach(function (f, k) {
       zincir = zincir.then(function () {
         $('yukleniyorMetin').textContent = dosyalar.length > 1 ? 'Panorama hazırlanıyor (' + (k + 1) + '/' + dosyalar.length + ')…' : 'Panorama hazırlanıyor…';
         return STP.isle(f, secenek).then(function (r) {
           if (r.uyari) uyarilar.push(r.uyari);
-          var s;
-          if (degistirIdx != null) {
-            s = t.sahneler[degistirIdx];
-            s.yaw = 0; s.pitch = 0; s.hfov = 100; s.bilgiNoktalari = []; s.ok = {};
-          } else {
-            var ad = k === 0 ? ($('odaAd').value.trim() || ('Oda ' + (t.sahneler.length + 1))) : ('Oda ' + (t.sahneler.length + 1));
-            s = { id: benzersizId(ad), ad: ad, yaw: 0, pitch: 0, hfov: 100, bilgiNoktalari: [], ok: {} };
-            t.sahneler.push(s);
-          }
-          s.tur = r.tur; s.haov = r.haov; s.vaov = r.vaov; s.vOffset = r.vOffset; s.gen = r.gen; s.yuk = r.yuk;
-          son = t.sahneler.indexOf(s);
-          if (urller[s.id]) { URL.revokeObjectURL(urller[s.id].pano); URL.revokeObjectURL(urller[s.id].kucuk); }
-          urller[s.id] = { pano: URL.createObjectURL(r.blob), kucuk: URL.createObjectURL(r.kucuk) };
-          return Promise.all([Depo.dosyaKaydet(t.id + '/' + s.id, r.blob), Depo.dosyaKaydet(t.id + '/' + s.id + '_k', r.kucuk)]);
+          return odaYerlestir(r, varsayilanAd(), degistirIdx).then(function (s) { son = t.sahneler.indexOf(s); delete odaUyari[s.id]; });
         });
       });
     });
@@ -268,13 +340,15 @@
   }
   function odaOnizle(i, yeniEklendi, uyari) {
     var s = t.sahneler[i];
+    uyari = uyari || odaUyari[s.id];
     modalAc('<h3>' + (yeniEklendi ? '✓ ' + ST.esc(s.ad) + ' eklendi' : ST.esc(s.ad)) + '</h3>' +
       (uyari ? '<p class="kucuk" style="background:#FFF7E0;padding:10px;border-radius:10px">' + ST.esc(uyari) + '</p>' : '') +
       '<div class="onizleme-alan" style="height:46vh;min-height:260px"><div id="modalPano"></div></div>' +
-      '<p class="kucuk" style="margin:8px 0 0">' + (s.tur === 'kure' ? '360° tam küre fotoğraf' : 'Telefon panoraması · yaklaşık ' + Math.round(s.haov) + '° geniş açı') + '. Parmağınızla sürükleyin.</p>' +
-      '<div class="dugmeler"><label class="btn" for="dosyaYeniden">↺ Yeniden çek</label><button class="btn-ana" id="mTamam">Tamam</button></div>' +
+      '<p class="kucuk" style="margin:8px 0 0">' + (s.tur === 'kure' ? '360° tam küre fotoğraf' : (+s.haov >= 360 ? 'Tam tur panorama (360°)' : 'Panorama · yaklaşık ' + Math.round(s.haov) + '° geniş açı')) + '. Parmağınızla sürükleyin.</p>' +
+      '<div class="dugmeler"><button class="btn" id="mYeniden">↺ Tekrar çek</button><label class="btn" for="dosyaYeniden">🖼 Galeriden</label><button class="btn-ana" id="mTamam">' + (yeniEklendi ? 'Kaydet ✓' : 'Tamam') + '</button></div>' +
       '<input type="file" id="dosyaYeniden" accept="image/*" hidden>');
-    $('mTamam').addEventListener('click', modalKapat);
+    $('mYeniden').addEventListener('click', function () { modalKapat(); cekimBaslat(i, true); });
+    $('mTamam').addEventListener('click', function () { modalKapat(); if (yeniEklendi) toast('“' + s.ad + '” kaydedildi'); });
     $('dosyaYeniden').addEventListener('change', function () { var f = this.files[0]; if (f) { modalKapat(); dosyalariIsle([f], i); } });
     if (modalViewer) try { modalViewer.destroy(); } catch (e) {}
     var c = STP.sahneAyari(s, urller[s.id].pano); c.autoLoad = true; c.showControls = false; c.autoRotate = -3;
@@ -367,9 +441,9 @@
 
   /* ---------- 4: Gönder ---------- */
   function gonderCiz() {
-    if (!t.slug) t.slug = ST.slugify(t.ilan.baslik);
+    if (!t.slug) t.slug = ST.slugify(t.ilan.baslik || t.ad) || t.id;
     var il = t.ilan;
-    $('ozetBaslik').textContent = il.baslik || 'Başlıksız';
+    $('ozetBaslik').textContent = turAdi(t);
     $('ozetAlt').textContent = [ST.fiyatYaz(il), t.sahneler.length + ' oda', ST.konumYaz(il)].filter(Boolean).join(' · ');
     $('ozetResim').style.backgroundImage = t.sahneler[0] ? 'url(' + urller[t.sahneler[0].id].kucuk + ')' : '';
     $('btnGoster').href = 'tur.html?taslak=' + encodeURIComponent(t.id);
@@ -389,7 +463,7 @@
   });
   $('fSlug').addEventListener('change', function () { this.value = t.slug; });
   function zipHazirla() {
-    if (!t.slug) t.slug = ST.slugify(t.ilan.baslik);
+    if (!t.slug) t.slug = ST.slugify(t.ilan.baslik || t.ad) || t.id;
     var p = STP.propertyOlustur(t);
     yukleniyor(true, 'Tur dosyası hazırlanıyor…');
     return Promise.all(t.sahneler.map(function (s) {
