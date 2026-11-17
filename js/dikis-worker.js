@@ -198,6 +198,9 @@ function birlestir(kareler, sec) {
     if (!dongu || Math.abs(poz.toplam - 2 * Math.PI) < 0.01) break;
     f = f * poz.toplam / (2 * Math.PI); odakKaynak += '+dongu';
   }
+  // eşleşme yoksa ve yön sensörü de yoksa anlamsız bir görüntü üretmek yerine dur
+  if (yawToplam === null && poz.basarisiz > (n - 1) / 2) throw new Error('Kareler arasında yeterli ortak nokta bulunamadı. Düz duvar yerine eşyaların göründüğü yerlerden, telefonu aynı noktada tutup daha yavaş dönerek tekrar çekin.');
+  if (poz.basarisiz === n - 1 && n > 2) uyarilar.push('Hiçbir kare çifti görüntüden eşleşmedi; panorama sadece telefonun yön sensörüyle dizildi. Daha iyi sonuç için tekrar çekmeniz önerilir.');
   ilerle(55, 'Hizalandı, görüntü oluşturuluyor…');
 
   // 5) pozlama kazançları (eşleşen noktaların renklerinden)
@@ -274,7 +277,7 @@ function hizala(cift, kapanis, kareler, f, cx, cy, esik, uyarilar, yawToplam, uy
     }
     th.push(th[i] + dth); ph.push(ph[i] + dph);
   });
-  if (basarisiz && uyar) uyarilar.push(basarisiz + ' kare çiftinde yeterli ortak nokta bulunamadı; bu geçişler telefonun yön sensörüne göre yerleştirildi, ek yeri belli olabilir.');
+  if (basarisiz && uyar) uyarilar.push(basarisiz + ' kare çiftinde yeterli ortak nokta bulunamadı; bu geçişler ' + (yawToplam !== null ? 'telefonun yön sensörüne göre' : 'tahmini açıyla') + ' yerleştirildi, ek yeri belli olabilir.');
 
   // c) döngü kapatma
   var dongu = false, toplam = th[n - 1];

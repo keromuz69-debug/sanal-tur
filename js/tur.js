@@ -33,9 +33,16 @@
   Promise.all([ST.getJSON('ayarlar.json').catch(function () { return {}; }), yukle]).then(function (r) {
     ayarlar = r[0] || {}; ilan = r[1]; baslat();
   }).catch(function (e) {
-    $('baslik').textContent = e.message;
+    var taslakMi = !!taslakId;
+    $('baslik').textContent = taslakMi ? 'Bu tur bu telefonda bulunamadı' : 'Bu ilan bulunamadı';
+    $('ustFiyat').textContent = taslakMi ? 'Silinmiş ya da başka bir telefonda kaydedilmiş olabilir.' : 'Link hatalı olabilir ya da ilan yayından kaldırılmış.';
     $('ipucu').classList.add('gizli');
-    console.error(e);
+    ['btnPaylas', 'btnMenu', 'btnPanel'].forEach(function (id) { var b = $(id); if (b) b.hidden = true; });
+    var a = document.createElement('a'); a.className = 'btn btn-ana btn-buyuk'; a.href = taslakMi ? 'cek.html' : 'index.html';
+    a.textContent = taslakMi ? 'Turlarıma git' : 'Tüm ilanları gör';
+    a.style.cssText = 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6';
+    document.body.appendChild(a);
+    console.warn(e);
   });
 
   function baslat() {
@@ -174,7 +181,12 @@
     });
     $('mTam').addEventListener('click', function () {
       menuKapat(); var el = document.documentElement;
-      if (document.fullscreenElement) document.exitFullscreen(); else if (el.requestFullscreen) el.requestFullscreen().catch(function () { viewer && viewer.toggleFullscreen(); }); else if (viewer) viewer.toggleFullscreen();
+      var acik = document.fullscreenElement || document.webkitFullscreenElement;
+      var ac = el.requestFullscreen || el.webkitRequestFullscreen, kapat = document.exitFullscreen || document.webkitExitFullscreen;
+      if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled) || !ac) { // iPhone Safari tam ekranı desteklemez
+        toast('iPhone\'da tam ekran için: Paylaş ⤴ › “Ana Ekrana Ekle”, sonra oradan açın.'); return;
+      }
+      if (acik) kapat.call(document); else { var r = ac.call(el); if (r && r.catch) r.catch(function () { toast('Tam ekran açılamadı'); }); }
     });
     $('mTum').addEventListener('click', function () { location.href = 'index.html'; });
     $('btnPaylas').addEventListener('click', function () {

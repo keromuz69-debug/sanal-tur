@@ -24,7 +24,11 @@
         var r = fn(st);
         if (r) r.onsuccess = function () { sonuc = r.result; };
         tx.oncomplete = function () { res(sonuc); };
-        tx.onerror = tx.onabort = function () { rej(tx.error || new Error('Kayıt hatası')); };
+        tx.onerror = tx.onabort = function () {
+          var e = tx.error;
+          if (e && e.name === 'QuotaExceededError') rej(Object.assign(new Error('Telefonda yer kalmadı. Eski taslakları silip tekrar deneyin.'), { name: e.name }));
+          else rej(e || new Error('Kayıt hatası (tarayıcı kaydetmeye izin vermedi; Gizli Sekme kullanıyorsanız normal sekmeye geçin)'));
+        };
       });
     });
   }
@@ -40,8 +44,17 @@
         return islem('dosyalar', 'readwrite', function (s) { return s.delete(IDBKeyRange.bound(id + '/', id + '/\uffff')); });
       });
     },
-    dosyaKaydet: function (k, blob) { return islem('dosyalar', 'readwrite', function (s) { return s.put(blob, k); }); },
-    dosyaAl: function (k) { return islem('dosyalar', 'readonly', function (s) { return s.get(k); }); },
+    // Görseller ArrayBuffer olarak saklanır: Safari (özellikle Gizli Sekme / bazı iOS sürümleri) IndexedDB'ye Blob yazamayabiliyor.
+    dosyaKaydet: function (k, blob) {
+      var oku = blob && blob.arrayBuffer ? blob.arrayBuffer() : new Promise(function (res, rej) { var f = new FileReader(); f.onload = function () { res(f.result); }; f.onerror = function () { rej(f.error); }; f.readAsArrayBuffer(blob); });
+      return oku.then(function (ab) { return islem('dosyalar', 'readwrite', function (s) { return s.put({ tip: blob.type || 'image/jpeg', veri: ab }, k); }); });
+    },
+    dosyaAl: function (k) {
+      return islem('dosyalar', 'readonly', function (s) { return s.get(k); }).then(function (r) {
+        if (r && r.veri) return new Blob([r.veri], { type: r.tip || 'image/jpeg' });
+        return r; // eski kayıtlar (Blob)
+      });
+    },
     dosyaSil: function (k) { return islem('dosyalar', 'readwrite', function (s) { return s.delete(k); }); },
     kaliciIste: function () { try { if (navigator.storage && navigator.storage.persist) return navigator.storage.persist(); } catch (e) {} return Promise.resolve(false); },
     yeniId: function () { return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }

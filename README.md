@@ -36,6 +36,12 @@ Taslaklar sadece o telefonun tarayıcısında saklanır (tarayıcı verileri sil
 - Birleştirme tamamen telefonda, internet/sunucu olmadan yapılır (`js/dikis-worker.js`, OpenCV.js 4.9 – yalnızca birleştirme anında arka planda yüklenir, ~10 MB, sonra tarayıcı önbelleğinde): ORB öznitelik eşleme → homografiden odak tahmini → küresel (equirectangular) projeksiyon → eğim+öteleme hizalama → 360° döngü kapatma → pozlama eşitleme → 2 bantlı yumuşak geçiş → temiz dikdörtgen kırpma. Eşleşme bulunamayan geçişler sensör açısına göre yerleştirilir ve kullanıcı uyarılır. Çıktı en fazla 6000 px genişlik / 16 MP (iOS bellek sınırı).
 - Sentetik test (Poly Haven panoramasından ±3° yön, ±2° eğim/dönme, %85–115 pozlama farkıyla kesilen 12 kare): odak 1281 px (gerçek 1280), 360° kapanış dikişsiz; masaüstü Chromium'da 10 kare ≈ 4,6 sn, 12 kare ≈ 5 sn (telefonda 2–4 kat sürebilir). Bkz. `screenshots/08-dikis-test.png`.
 
+### Çevrimdışı kullanım ve “Ana Ekrana Ekle”
+- Site bir kez açıldıktan sonra `sw.js` (service worker) uygulama dosyalarını ve birleştirme kütüphanesini telefonda saklar; çekim ekranı açıldığında OpenCV önceden indirilir. Böylece bodrum/zayıf çekim olan dairelerde de çekip birleştirebilirsiniz. Yayındaki ilan görselleri önbelleğe alınmaz.
+- iPhone'da Safari › Paylaş › **Ana Ekrana Ekle** ile uygulama gibi tam ekran açılır (iPhone Safari sayfalarda “Tam ekran” desteklemez).
+- Güncelleme yayınlarken `sw.js` içindeki `SURUM` değerini artırın (eski önbellek temizlenir).
+- Safari **Gizli Sekme**'de taslaklar sekme kapanınca silinir; normal sekme kullanın.
+
 ### Telefon panoraması nasıl gösteriliyor?
 Normal telefon panoraması 360° küre değil, geniş bir şerittir. Sistem en/boy oranından yatay açıyı tahmin eder (dikey açı varsayılan 65°, “Gelişmiş”ten ayarlanır; Android Google Kamera fotoğraflarında dosyadaki panorama bilgisi okunur). Görüntüleyici bu odalarda sağa-sola ve yukarı-aşağı bakışı fotoğrafın sınırlarıyla kısıtlar, böylece boş/siyah alan görünmez.
 

@@ -11,7 +11,10 @@
   }
   // kareler: [{blob | imageData, yaw?, pitch?, roll?}]  ->  {blob, gen, yuk, haov, vaov, vOffset, dongu, uyarilar, sure}
   function birlestir(kareler, ilerleme, secenek) {
-    return Promise.all(kareler.map(kareVerisi)).then(function (veriler) {
+    // kareleri sırayla çöz (aynı anda 12 görüntü açmak iPhone'da bellek sıçraması yapar)
+    var veriler = [], zincir = Promise.resolve();
+    kareler.forEach(function (k) { zincir = zincir.then(function () { return kareVerisi(k).then(function (d) { veriler.push(d); }); }); });
+    return zincir.then(function () {
       var W = veriler[0].width, H = veriler[0].height;
       var gonder = veriler.map(function (d, i) {
         var src = d;

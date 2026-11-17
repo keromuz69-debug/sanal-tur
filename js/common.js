@@ -128,4 +128,8 @@
     esc: esc, fiyatYaz: fiyatYaz, degerYaz: degerYaz, konumYaz: konumYaz, yerTutucuMu: yerTutucuMu,
     getJSON: getJSON, slugify: slugify, hotspotOlustur: hotspotOlustur, dosyaKorumasi: dosyaKorumasi
   };
+  // Çevrimdışı destek (https veya localhost'ta)
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    w.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
 })(window);

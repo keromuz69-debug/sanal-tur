@@ -24,7 +24,9 @@
   }
 
   // secenek: { hemen (dokunuş içinde çağrıldı), tekOda, ad, varsayilanAd(), odaBitti({kareler, ad}) , kapandi() }
+  var acik = null;
   function ac(secenek) {
+    if (acik) return acik; // aynı anda tek çekim ekranı
     secenek = secenek || {};
     var kareler = [], akis = null, yonVar = false, yonIzni = 'bilinmiyor', durum = 'baslangic';
     var sonYon = null, yawAcik = 0, oncekiYaw = null, sonCekimYaw = null, ornekler = [], kapandi = false, bekle = false, ilkDengeZ = 0;
@@ -66,14 +68,14 @@
       if (c) { secilenAd = secilenAd === c.dataset.ad ? '' : c.dataset.ad; $$(kok, '[data-ad]').forEach(function (x) { x.classList.toggle('secili', x.dataset.ad === secilenAd); }); adBaslik(); return; }
       var b = e.target.closest('[data-i]'); if (!b) return;
       var i = b.dataset.i;
-      if (i === 'kapat') { if (durum !== 'cekim' || !kareler.length || confirm('Bu odanın çekimi iptal edilsin mi?')) kapat(); }
+      if (i === 'kapat') { if (durum !== 'cekim' || !kareler.length || confirm('Bu odanın çekimi iptal edilsin mi?')) kapat(false); }
       else if (i === 'basla') { panelGizle(); baslat(); }
       else if (i === 'cek') cek();
       else if (i === 'sil') sil();
-      else if (i === 'bitir') { if (kareler.length) bitir(); else kapat(); }
+      else if (i === 'bitir') { if (kareler.length) bitir(); else kapat(false); }
       else if (i === 'sonraki') { secilenAd = ''; yeniOda(); }
       else if (i === 'tekrar') { if (secenek.tekrar) secenek.tekrar(); bitenOdaSayisi--; secilenAd = tekrarAd; yeniOda(); }
-      else if (i === 'tamam') kapat();
+      else if (i === 'tamam') kapat(false);
     });
     function $$(k, s) { return Array.prototype.slice.call(k.querySelectorAll(s)); }
     function adBaslik() { var h = kok.querySelector('.c-panel h3 b'); if (h) h.textContent = ad(); }
@@ -95,6 +97,45 @@
         return navigator.mediaDevices.getUserMedia({ audio: false, video: k });
       }).catch(function () { return s; });
     }
+    function kameraIste() { // ayrıntılı istek reddedilirse sade istekle tekrar dene
+      return navigator.mediaDevices.getUserMedia({ audio: false, video: KISIT }).catch(function (e) {
+        if (e && /Overconstrained|NotSupported|NotReadable|TypeError|Abort/i.test(e.name)) return navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: 'environment' } });
+        throw e;
+      });
+    }
+    function kameraHata(e) {
+      var n = e && e.name;
+      if (n === 'NotAllowedError' || n === 'SecurityError') return 'Kamera izni verilmedi. iPhone: Ayarlar › Safari › Kamera › “İzin Ver”, sonra sayfayı yenileyin.';
+      if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'Bu cihazda kullanılabilir kamera bulunamadı.';
+      if (n === 'NotReadableError' || n === 'AbortError') return 'Kamera şu an başka bir uygulama tarafından kullanılıyor. Diğer kamera uygulamalarını kapatıp tekrar deneyin.';
+      return 'Kamera açılamadı. Sayfayı yenileyip tekrar deneyin ya da “Galeriden Seç”i kullanın.';
+    }
+    function kameraAc() {
+      return kameraIste().then(anaKamera).then(function (s) {
+        if (kapandi) { s.getTracks().forEach(function (t) { t.stop(); }); return; }
+        if (akis) akis.getTracks().forEach(function (t) { t.stop(); });
+        akis = s; video.srcObject = s;
+        return video.play();
+      });
+    }
+    // Uygulamadan çıkıp dönünce (iOS kamerayı durdurur) akışı yeniden başlat
+    function gorunurluk() {
+      if (document.hidden) { ornekler = []; ilkDengeZ = 0; return; }
+      var tr = akis && akis.getVideoTracks()[0];
+      if (akis && (!tr || tr.readyState === 'ended')) kameraAc().catch(function () { yonerge('Kamera yeniden açılamadı. Kapatıp tekrar deneyin.'); });
+    }
+    document.addEventListener('visibilitychange', gorunurluk);
+    function sayfaGidiyor() { kapat(true); }
+    w.addEventListener('pagehide', sayfaGidiyor);
+    // Geri tuşu/hareketi: sayfadan çıkmak yerine çekim ekranını kapatsın
+    try { history.pushState({ cekim: 1 }, ''); } catch (e) {}
+    function geriTusu() { kapat(true); }
+    w.addEventListener('popstate', geriTusu);
+    var opencvIstendi = false;
+    function opencvOnYukle() { // birleştirme kütüphanesini çekim sırasında önbelleğe al (zayıf internette bekleme olmasın)
+      if (opencvIstendi || w.__opencvOnYuk) return; opencvIstendi = w.__opencvOnYuk = true;
+      try { fetch('vendor/opencv/opencv.js', { cache: 'force-cache' }).catch(function () { w.__opencvOnYuk = false; }); } catch (e) {}
+    }
     function baslat() {
       if (!w.isSecureContext) { yonerge('Kamera için güvenli bağlantı (https) gerekir.'); return; }
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { yonerge('Bu tarayıcı uygulama içi kamerayı desteklemiyor. “Galeriden Seç”i kullanın.'); return; }
@@ -103,7 +144,7 @@
         if (w.DeviceOrientationEvent && typeof DeviceOrientationEvent.requestPermission === 'function') izinP = DeviceOrientationEvent.requestPermission().catch(function () { return 'denied'; });
         else if (w.DeviceOrientationEvent) izinP = Promise.resolve('granted');
       } catch (e) { izinP = Promise.resolve('denied'); }
-      var kameraP = navigator.mediaDevices.getUserMedia({ audio: false, video: KISIT });
+      var kameraP = kameraIste();
       kameraP.catch(function () {});
       durum = 'cekim';
       izinP.then(function (s) {
@@ -119,9 +160,11 @@
         if (kapandi) return;
         boyutla(); guncelle();
         setTimeout(function () { if (!yonVar && !kapandi) ipucu(yonIzni === 'denied' && !yonVar ? 'Hareket izni verilmedi: her kareyi deklanşörle çekin, soldaki silik şeridi hizalayın.' : 'Yön sensörü bulunamadı: her kareyi deklanşörle çekin, soldaki silik şeridi hizalayın.', 'uyari'); }, 1500);
+        opencvOnYukle();
         dongu();
       }).catch(function (e) {
-        var m = e && e.name === 'NotAllowedError' ? 'Kamera izni verilmedi. iPhone: Ayarlar › Safari › Kamera › “İzin Ver”, sonra sayfayı yenileyin.' : e && e.name === 'NotFoundError' ? 'Kamera bulunamadı.' : 'Kamera açılamadı: ' + (e && e.message || e);
+        console.warn('kamera', e);
+        var m = kameraHata(e);
         yonerge(m);
         panel('<h3>Kamera açılamadı</h3><p>' + esc(m) + '</p><p class="kucuk">Panoramayı telefonun kendi Kamera uygulamasında (PANO) çekip “Galeriden Seç” ile de ekleyebilirsiniz.</p><button class="btn btn-ana btn-buyuk btn-blok" data-i="tamam">Tamam</button>');
       });
@@ -145,7 +188,9 @@
     function dongu() {
       if (kapandi) return;
       requestAnimationFrame(dongu);
-      if (!sonYon || durum !== 'cekim') return;
+      if (durum !== 'cekim') return;
+      if (w.innerWidth > w.innerHeight * 1.05) { ilkDengeZ = 0; ipucu('Telefonu dik (portre) tutun', 'uyari'); return; }
+      if (!sonYon) return;
       var dengeli = Math.abs(sonYon.roll) < 6 && Math.abs(sonYon.pitch) < 18;
       var cz = $('cCizgi'); cz.style.transform = 'rotate(' + sonYon.roll.toFixed(1) + 'deg) translateY(' + (sonYon.pitch * 3).toFixed(0) + 'px)';
       cz.classList.toggle('iyi', dengeli);
@@ -222,7 +267,7 @@
       kareler = []; sonCekimYaw = null; durum = 'ara'; hayaletCiz(); guncelle(); ipucu('');
       bitenOdaSayisi++;
       if (secenek.odaBitti) secenek.odaBitti({ kareler: k, ad: odaAd });
-      if (secenek.tekOda) { kapat(); return; }
+      if (secenek.tekOda) { kapat(false); return; }
       secilenAd = '';
       panel('<h3>✓ <b></b> çekildi</h3><p class="c-durum" id="cDurum">Arka planda birleştiriliyor… Siz sonraki odaya geçebilirsiniz.</p>' +
         '<button class="btn btn-ana btn-buyuk btn-blok" data-i="sonraki">📷 Sonraki Odayı Çek</button>' +
@@ -235,10 +280,13 @@
       ciplerCiz($('cCipler'));
       panelGizle(); kareler = []; sonCekimYaw = null; ilkDengeZ = 0; durum = 'cekim'; guncelle(); hayaletCiz();
     }
-    function kapat() {
+    function kapat(gecmistenGeldi) {
       if (kapandi) return;
-      kapandi = true;
+      kapandi = true; acik = null;
       w.removeEventListener('deviceorientation', yonGeldi, true); w.removeEventListener('resize', boyutla);
+      document.removeEventListener('visibilitychange', gorunurluk); w.removeEventListener('pagehide', sayfaGidiyor); w.removeEventListener('popstate', geriTusu);
+      if (gecmistenGeldi !== true && history.state && history.state.cekim) { try { history.back(); } catch (e) {} }
+      video.srcObject = null;
       if (akis) akis.getTracks().forEach(function (t) { t.stop(); });
       kok.remove(); document.documentElement.classList.remove('cekim-acik');
       if (secenek.kapandi) secenek.kapandi(bitenOdaSayisi);
@@ -256,7 +304,7 @@
       kapat: kapat,
       cek: cek, bitir: bitir, kareler: function () { return kareler; }
     };
-    w.__cekim = api;
+    w.__cekim = api; acik = api;
     return api;
   }
   w.STCekim = { ac: ac, yonHesapla: yonHesapla, ODA_ADLARI: ODA_ADLARI };

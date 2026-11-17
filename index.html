@@ -7,6 +7,11 @@
 <title>360° Sanal Tur</title>
 <meta name="description" content="Daire ve ticari gayrimenkulleri 360° sanal tur ile gezin">
 <link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="img/ikon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Sanal Tur">
 </head>
 <body>
 <header class="ustbar">
@@ -44,7 +49,7 @@
   var tum = [], filtre = '';
   ST.dosyaKorumasi();
   ST.getJSON('ayarlar.json').then(function(a){ if (a.marka && a.marka.ofisAdi) document.getElementById('ofisAdi').textContent = a.marka.ofisAdi; }).catch(function(){});
-  Depo.taslakListe().then(function(l){ if (l.length) document.getElementById('taslakSayi').textContent = l.length + ' taslak bu telefonda kayıtlı'; }).catch(function(){});
+  Depo.taslakListe().then(function(l){ l = l.filter(function(x){ return x.sahneler.length || ((x.ilan||{}).baslik||'').trim(); }); if (l.length) document.getElementById('taslakSayi').textContent = l.length + ' taslak bu telefonda kayıtlı'; }).catch(function(){});
   ST.getJSON('tours/index.json').then(function(ix){
     return Promise.all((ix.ilanlar || []).map(function(slug){
       return ST.getJSON('tours/' + slug + '/property.json').then(function(p){ p._slug = slug; return p; }).catch(function(){ return null; });

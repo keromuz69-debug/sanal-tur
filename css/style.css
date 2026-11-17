@@ -404,3 +404,9 @@ html.cekim-acik,html.cekim-acik body{overflow:hidden}
 .oda.kuyrukta .resim .donen{width:26px;height:26px;margin:0;border-width:3px}
 .oda.kuyrukta .yazi b{display:block;font-size:15px}
 .cekim .c-ust{flex-direction:column;align-items:stretch;gap:0}
+@media (max-width:900px){
+  body.editor .ustbar{flex-wrap:wrap;row-gap:8px}
+  body.editor .ustbar .logo small{display:none}
+  body.editor #mevcutSec{order:5;flex:1 1 60%;min-width:0;width:auto!important}
+  body.editor #btnYeni{order:6}
+}
